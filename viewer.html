@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Loci — Captures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Mansalva&family=Schoolbell&family=Coming+Soon&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #FFF9F0;
+    --card:      #FFFFFF;
+    --text:      #2D1B69;
+    --muted:     #9B8EC4;
+    --pink:      #FF2D78;
+    --yellow:    #FFD700;
+    --orange:    #FF6B35;
+    --purple:    #7C3AED;
+    --border:    rgba(124,58,237,0.18);
+    --border-strong: rgba(124,58,237,0.35);
+    --shadow-y:  0 8px 28px rgba(255,215,0,0.45);
+    --shadow-o:  0 4px 16px rgba(255,107,53,0.45);
+    --shadow-p:  0 4px 14px rgba(124,58,237,0.35);
+  }
+
+  body {
+    font-family: 'Coming Soon', cursive, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 32px 0;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .header h1 {
+    font-family: 'Mansalva', cursive;
+    font-size: 56px;
+    color: var(--pink);
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .header-sub {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .count-badge {
+    font-family: 'Schoolbell', cursive;
+    font-size: 14px;
+    background: var(--purple);
+    color: #fff;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-p);
+    flex-shrink: 0;
+  }
+
+  /* ── main grid ── */
+  .main {
+    max-width: 1100px;
+    margin: 36px auto 80px;
+    padding: 0 32px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  /* ── card ── */
+  .card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: slideUp 0.25s ease both;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-photo {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    display: block;
+    background: #f0ebff;
+  }
+  .card-photo-placeholder {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, #f0ebff 0%, #e8e0ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-photo-placeholder svg { opacity: 0.25; }
+
+  .card-body { padding: 14px 16px 16px; }
+
+  .card-prompt {
+    font-family: 'Coming Soon', cursive;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .card-meta {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── audio player ── */
+  .player {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .play-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--yellow);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-y);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: 'Schoolbell', cursive;
+    color: var(--text);
+  }
+  .play-btn:hover  { transform: scale(1.08); }
+  .play-btn:active { transform: scale(0.93); }
+  .play-btn:disabled {
+    background: #e8e0ff;
+    box-shadow: none;
+    cursor: default;
+    transform: none;
+  }
+  .play-btn svg { pointer-events: none; }
+
+  .player-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  /* progress track — click to seek */
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(124,58,237,0.12);
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: var(--orange);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+    pointer-events: none;
+  }
+
+  .player-times {
+    display: flex;
+    justify-content: space-between;
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .no-audio {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  /* ── loading / empty ── */
+  .empty {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--muted);
+  }
+  .empty-title {
+    font-family: 'Mansalva', cursive;
+    font-size: 32px;
+    color: var(--pink);
+    margin-bottom: 10px;
+  }
+
+  /* ── spinner ── */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border-strong);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── pulse dot (loading audio) ── */
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Loci</h1>
+    <div class="header-sub">Capture viewer</div>
+  </div>
+  <div class="count-badge" id="count">—</div>
+</div>
+
+<div class="main">
+  <div class="grid" id="grid">
+    <div class="empty" style="grid-column:1/-1">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Web Audio context ──────────────────────────────────────────────────────
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// Currently playing source — so we can stop it if another card plays
+let currentSource = null;
+let currentStop   = null;
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// ── Build player DOM ───────────────────────────────────────────────────────
+function makePlayer(audioUrl) {
+  const wrap = document.createElement('div');
+  wrap.className = 'player';
+
+  // Play button
+  const btn = document.createElement('button');
+  btn.className = 'play-btn';
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <polygon points="5,3 19,12 5,21" fill="#2D1B69"/>
+  </svg>`;
+
+  // Right side
+  const right = document.createElement('div');
+  right.className = 'player-right';
+
+  const track = document.createElement('div');
+  track.className = 'progress-track';
+  const fill = document.createElement('div');
+  fill.className = 'progress-fill';
+  track.appendChild(fill);
+
+  const times = document.createElement('div');
+  times.className = 'player-times';
+  const elapsed = document.createElement('span');
+  elapsed.textContent = '0:00';
+  const total = document.createElement('span');
+  total.textContent = '--:--';
+  times.append(elapsed, total);
+
+  right.append(track, times);
+  wrap.append(btn, right);
+
+  // State
+  let decoded   = null;   // AudioBuffer, loaded once
+  let source    = null;   // current BufferSource
+  let rafId     = null;
+  let startCtxTime = 0;
+  let startOffset  = 0;   // where in the buffer we started (for seek)
+  let duration  = 0;
+  let playing   = false;
+
+  function setFill(fraction) {
+    fill.style.width = (Math.min(Math.max(fraction, 0), 1) * 100) + '%';
+  }
+
+  function setElapsed(secs) {
+    elapsed.textContent = formatTime(secs);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const ctx  = getCtx();
+    const gone = (ctx.currentTime - startCtxTime) + startOffset;
+    setElapsed(gone);
+    setFill(gone / duration);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stopPlayback() {
+    playing = false;
+    cancelAnimationFrame(rafId);
+    if (source) { try { source.stop(); } catch(e) {} source = null; }
+    setFill(0);
+    setElapsed(0);
+    showPlayIcon();
+    currentSource = null;
+    currentStop   = null;
+  }
+
+  function showPlayIcon() {
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <polygon points="5,3 19,12 5,21" fill="#2D1B69"/>
+    </svg>`;
+    btn.disabled = false;
+  }
+  function showStopIcon() {
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <rect x="5" y="4" width="4" height="16" fill="#2D1B69"/>
+      <rect x="15" y="4" width="4" height="16" fill="#2D1B69"/>
+    </svg>`;
+    btn.disabled = false;
+  }
+  function showLoadingIcon() {
+    btn.innerHTML = `<div class="pulse-dot"></div>`;
+    btn.disabled = true;
+  }
+
+  function startFrom(offset) {
+    // Stop anything else playing globally
+    if (currentStop && currentStop !== stopPlayback) currentStop();
+
+    const ctx = getCtx();
+    source = ctx.createBufferSource();
+    source.buffer = decoded;
+    source.connect(ctx.destination);
+
+    startCtxTime = ctx.currentTime;
+    startOffset  = offset;
+    playing      = true;
+
+    source.onended = () => {
+      if (playing) stopPlayback();
+    };
+
+    source.start(0, offset);
+    currentSource = source;
+    currentStop   = stopPlayback;
+
+    showStopIcon();
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // Click track to seek
+  track.addEventListener('click', (e) => {
+    if (!decoded) return;
+    const rect     = track.getBoundingClientRect();
+    const fraction = (e.clientX - rect.left) / rect.width;
+    const offset   = fraction * duration;
+    if (playing) {
+      try { source.stop(); } catch(e) {}
+    }
+    startFrom(offset);
+  });
+
+  // Main button handler
+  btn.addEventListener('click', async () => {
+    if (playing) { stopPlayback(); return; }
+
+    // Load once
+    if (!decoded) {
+      showLoadingIcon();
+      try {
+        const ctx  = getCtx();
+        const resp = await fetch(audioUrl);
+        const buf  = await resp.arrayBuffer();
+        decoded    = await ctx.decodeAudioData(buf);
+        duration   = decoded.duration;
+        total.textContent = formatTime(duration);
+      } catch(err) {
+        console.error('Audio load error:', err);
+        btn.innerHTML = '!';
+        btn.disabled = false;
+        return;
+      }
+    }
+
+    startFrom(startOffset);
+  });
+
+  return wrap;
+}
+
+// ── Render grid ────────────────────────────────────────────────────────────
+let knownIds = new Set();
+
+async function load() {
+  let data;
+  try {
+    const res = await fetch('/api/captures');
+    data = await res.json();
+  } catch(e) { return; }
+
+  document.getElementById('count').textContent = data.length;
+
+  const grid = document.getElementById('grid');
+
+  // First load — full render
+  if (knownIds.size === 0) {
+    if (!data.length) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+        <div class="empty-title">Nothing yet</div>
+        <p style="font-size:14px;color:var(--muted)">Captures from the lens will appear here.</p>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = '';
+  }
+
+  // Prepend only new cards
+  data.forEach((c, i) => {
+    if (knownIds.has(c.id)) return;
+    knownIds.add(c.id);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.animationDelay = (i * 0.04) + 's';
+    card.id = 'card-' + c.id;
+
+    // Photo
+    if (c.photo_url) {
+      const img = document.createElement('img');
+      img.className = 'card-photo';
+      img.src = c.photo_url;
+      img.loading = 'lazy';
+      img.alt = c.prompt || 'capture';
+      card.appendChild(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.className = 'card-photo-placeholder';
+      ph.innerHTML = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+      card.appendChild(ph);
+    }
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'card-body';
+
+    const prompt = document.createElement('div');
+    prompt.className = 'card-prompt';
+    prompt.textContent = c.prompt || '(no prompt)';
+
+    const meta = document.createElement('div');
+    meta.className = 'card-meta';
+    const d = new Date(c.created_at * 1000);
+    meta.textContent = `${c.device_id}  ·  ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+
+    body.appendChild(prompt);
+    body.appendChild(meta);
+
+    if (c.audio_url) {
+      body.appendChild(makePlayer(c.audio_url));
+    } else {
+      const na = document.createElement('div');
+      na.className = 'no-audio';
+      na.textContent = 'No audio recorded';
+      body.appendChild(na);
+    }
+
+    card.appendChild(body);
+
+    // Prepend so newest is first
+    if (grid.firstChild) {
+      grid.insertBefore(card, grid.firstChild);
+    } else {
+      grid.appendChild(card);
+    }
+  });
+}
+
+load();
+setInterval(load, 6000);
+</script>
+</body>
+</html>
