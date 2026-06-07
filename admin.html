@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Loci — Prompts</title>
+<link href="https://fonts.googleapis.com/css2?family=Coming+Soon&family=Mansalva&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:     #FFF9F0;
+    --text:   #2D1B69;
+    --muted:  #9B8EC4;
+    --pink:   #FF2D78;
+    --yellow: #FFD700;
+    --orange: #FF6B35;
+    --purple: #7C3AED;
+    --border: rgba(124,58,237,0.2);
+  }
+
+  body {
+    font-family: 'Coming Soon', cursive, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 24px 64px;
+  }
+
+  .header {
+    max-width: 640px;
+    margin: 0 auto 32px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  h1 {
+    font-family: 'Mansalva', cursive;
+    font-size: 32px;
+    color: var(--pink);
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .section-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  #prompt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .prompt-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .prompt-row textarea {
+    flex: 1;
+    font-family: 'Coming Soon', cursive, sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 52px;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .prompt-row textarea:focus {
+    border-color: var(--purple);
+  }
+
+  .drag-handle {
+    color: var(--muted);
+    font-size: 18px;
+    padding-top: 12px;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px 4px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .btn-remove:hover { color: var(--pink); }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Coming Soon', cursive, sans-serif;
+    font-size: 14px;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+  .btn:hover  { opacity: 0.88; }
+
+  .btn-add {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    color: var(--purple);
+  }
+
+  .btn-save {
+    background: var(--yellow);
+    color: var(--text);
+  }
+
+  .status {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 20px;
+  }
+
+  .status.ok     { color: var(--purple); }
+  .status.error  { color: var(--pink); }
+
+  .hint {
+    max-width: 640px;
+    margin: 16px auto 0;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  a { color: var(--purple); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Loci</h1>
+  <span class="subtitle">prompt editor — <a href="/">view captures</a></span>
+</div>
+
+<div class="card">
+  <div class="section-label">Current prompts — edit, reorder, add or remove</div>
+
+  <div id="prompt-list">
+    <div class="status">Loading...</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-add" onclick="addPrompt()">+ add prompt</button>
+    <button class="btn btn-save" onclick="savePrompts()">save to device</button>
+  </div>
+
+  <div class="status" id="status"></div>
+</div>
+
+<p class="hint">
+  Use <code>\n</code> for a line break within a prompt — the device displays each line separately.<br>
+  Changes take effect the next time the lens boots and connects to WiFi.
+</p>
+
+<script>
+  const list = document.getElementById('prompt-list');
+  const statusEl = document.getElementById('status');
+
+  async function load() {
+    try {
+      const res = await fetch('/api/prompts');
+      const data = await res.json();
+      renderPrompts(data.prompts || []);
+    } catch (e) {
+      list.innerHTML = '<div class="status error">Failed to load prompts</div>';
+    }
+  }
+
+  function renderPrompts(prompts) {
+    list.innerHTML = '';
+    if (prompts.length === 0) {
+      addPrompt();
+      return;
+    }
+    // Prompts from the API use real newlines — convert to \n for display
+    prompts.forEach(p => addPrompt(p.replace(/\n/g, '\\n')));
+  }
+
+  function addPrompt(value = '') {
+    const row = document.createElement('div');
+    row.className = 'prompt-row';
+    row.draggable = true;
+    row.innerHTML = `
+      <span class="drag-handle" title="drag to reorder">⠿</span>
+      <textarea placeholder="e.g. Find something\nSTRANGE">${value}</textarea>
+      <button class="btn-remove" title="remove" onclick="this.closest('.prompt-row').remove()">×</button>
+    `;
+
+    // Drag-to-reorder
+    row.addEventListener('dragstart', e => {
+      e.dataTransfer.effectAllowed = 'move';
+      row.style.opacity = '0.4';
+      list._dragging = row;
+    });
+    row.addEventListener('dragend', () => {
+      row.style.opacity = '';
+      list._dragging = null;
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      const dragging = list._dragging;
+      if (!dragging || dragging === row) return;
+      const rect = row.getBoundingClientRect();
+      const mid  = rect.top + rect.height / 2;
+      if (e.clientY < mid) {
+        list.insertBefore(dragging, row);
+      } else {
+        list.insertBefore(dragging, row.nextSibling);
+      }
+    });
+
+    list.appendChild(row);
+  }
+
+  async function savePrompts() {
+    const rows = list.querySelectorAll('textarea');
+    const prompts = [];
+    rows.forEach(ta => {
+      const text = ta.value.trim();
+      if (text) {
+        // Convert literal \n back to real newlines for the device
+        prompts.push(text.replace(/\\n/g, '\n'));
+      }
+    });
+
+    if (prompts.length === 0) {
+      setStatus('Add at least one prompt first.', 'error');
+      return;
+    }
+
+    setStatus('Saving...');
+
+    try {
+      const res = await fetch('/api/prompts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompts })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setStatus(`Saved ${data.count} prompt${data.count !== 1 ? 's' : ''}. Device will pick these up on next boot.`, 'ok');
+      } else {
+        setStatus('Save failed: ' + JSON.stringify(data), 'error');
+      }
+    } catch (e) {
+      setStatus('Network error — ' + e.message, 'error');
+    }
+  }
+
+  function setStatus(msg, type = '') {
+    statusEl.textContent = msg;
+    statusEl.className = 'status ' + type;
+  }
+
+  load();
+</script>
+</body>
+</html>
