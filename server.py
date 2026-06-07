@@ -42,6 +42,30 @@ def init_db():
                 created_at  REAL
             )
         """)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS prompts (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                text      TEXT NOT NULL,
+                active    INTEGER DEFAULT 1,
+                order_idx INTEGER DEFAULT 0
+            )
+        """)
+
+        # Seed defaults if table is empty
+        cur = db.execute("SELECT COUNT(*) FROM prompts")
+        if cur.fetchone()[0] == 0:
+            defaults = [
+                ("Is sugar bad\nfor your teeth?", 0),
+                ("Is school\nimportant?", 1),
+                ("Are screens\nbad for you?", 2),
+                ("Find something\nSTRANGE", 3),
+                ("Find something\nOLD", 4),
+                ("Find something\nBROKEN", 5),
+            ]
+            db.executemany(
+                "INSERT INTO prompts (text, active, order_idx) VALUES (?, 1, ?)",
+                defaults
+            )
         db.commit()
 
 init_db()
@@ -173,6 +197,38 @@ VIEWER_HTML = open(str(BASE_DIR / "viewer.html")).read()
 @app.route("/")
 def viewer():
     return VIEWER_HTML, 200, {"Content-Type": "text/html"}
+
+# GET /api/prompts — device fetches this on boot
+@app.route("/api/prompts", methods=["GET"])
+def get_prompts():
+    with get_db() as db:
+        rows = db.execute(
+            "SELECT text FROM prompts WHERE active=1 ORDER BY order_idx ASC"
+        ).fetchall()
+    return jsonify({"prompts": [r["text"] for r in rows]})
+
+# POST /api/prompts — you call this to replace the full list remotely
+# Body: { "prompts": ["text one", "text two\nline two", ...] }
+@app.route("/api/prompts", methods=["POST"])
+def set_prompts():
+    data = request.get_json(force=True)
+    if not data or "prompts" not in data:
+        return jsonify({"error": "missing prompts array"}), 400
+    with get_db() as db:
+        db.execute("DELETE FROM prompts")
+        for i, text in enumerate(data["prompts"]):
+            db.execute(
+                "INSERT INTO prompts (text, active, order_idx) VALUES (?, 1, ?)",
+                (text, i)
+            )
+        db.commit()
+    return jsonify({"ok": True, "count": len(data["prompts"])})
+
+ADMIN_HTML = open(str(BASE_DIR / "admin.html")).read()
+
+@app.route("/admin")
+def admin():
+    return ADMIN_HTML, 200, {"Content-Type": "text/html"}
 
 if __name__ == "__main__":
     print(f"Loci Lens server → http://0.0.0.0:{PORT}")
