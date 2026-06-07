@@ -30,8 +30,18 @@ def get_db():
     return conn
 
 def init_db():
-    
     with get_db() as db:
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS captures (
+                id          TEXT PRIMARY KEY,
+                device_id   TEXT,
+                prompt      TEXT,
+                timestamp   TEXT,
+                photo_path  TEXT,
+                audio_path  TEXT,
+                created_at  REAL
+            )
+        """)
         db.execute("""
             CREATE TABLE IF NOT EXISTS prompts (
                 id           INTEGER PRIMARY KEY AUTOINCREMENT,
