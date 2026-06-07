@@ -30,6 +30,7 @@ def get_db():
     return conn
 
 def init_db():
+    db.execute("DROP TABLE IF EXISTS prompts")
     with get_db() as db:
         db.execute("""
             CREATE TABLE IF NOT EXISTS prompts (
