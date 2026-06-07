@@ -225,11 +225,11 @@ ADMIN_HTML = open(str(BASE_DIR / "admin.html")).read()
 def admin():
     return ADMIN_HTML, 200, {"Content-Type": "text/html"}
 
-@app.route("/api/reset-db-once-xyz")
-def reset_db_once():
-    DB_PATH.unlink(missing_ok=True)
-    init_db()
-    return jsonify({"ok": True, "message": "database reset"})
+@app.route("/api/debug/prompts")
+def debug_prompts():
+    with get_db() as db:
+        rows = db.execute("SELECT * FROM prompts").fetchall()
+    return jsonify([dict(r) for r in rows])
 
 if __name__ == "__main__":
     print(f"Loci Lens server → http://0.0.0.0:{PORT}")
