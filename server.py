@@ -32,38 +32,28 @@ def get_db():
 def init_db():
     with get_db() as db:
         db.execute("""
-            CREATE TABLE IF NOT EXISTS captures (
-                id          TEXT PRIMARY KEY,
-                device_id   TEXT,
-                prompt      TEXT,
-                timestamp   TEXT,
-                photo_path  TEXT,
-                audio_path  TEXT,
-                created_at  REAL
-            )
-        """)
-        db.execute("""
             CREATE TABLE IF NOT EXISTS prompts (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                text      TEXT NOT NULL,
-                active    INTEGER DEFAULT 1,
-                order_idx INTEGER DEFAULT 0
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                camera_text  TEXT NOT NULL,
+                audio_text   TEXT NOT NULL,
+                active       INTEGER DEFAULT 1,
+                order_idx    INTEGER DEFAULT 0
             )
         """)
 
-        # Seed defaults if table is empty
         cur = db.execute("SELECT COUNT(*) FROM prompts")
         if cur.fetchone()[0] == 0:
             defaults = [
-                ("Is sugar bad\nfor your teeth?", 0),
-                ("Is school\nimportant?", 1),
-                ("Are screens\nbad for you?", 2),
-                ("Find something\nSTRANGE", 3),
-                ("Find something\nOLD", 4),
-                ("Find something\nBROKEN", 5),
+                ("Is sugar bad\nfor your teeth?", "Why do you\nthink that?", 0),
+                ("Is school\nimportant?",         "Tell me\nmore.",          1),
+                ("Are screens\nbad for you?",     "What makes\nyou say so?",  2),
+                ("Find something\nSTRANGE",       "Why is it\nstrange?",      3),
+                ("Find something\nOLD",           "How do you\nknow?",        4),
+                ("Find something\nBROKEN",        "What happened\nto it?",    5),
             ]
             db.executemany(
-                "INSERT INTO prompts (text, active, order_idx) VALUES (?, 1, ?)",
+                "INSERT INTO prompts (camera_text, audio_text, active, order_idx) "
+                "VALUES (?, ?, 1, ?)",
                 defaults
             )
         db.commit()
@@ -198,17 +188,20 @@ VIEWER_HTML = open(str(BASE_DIR / "viewer.html")).read()
 def viewer():
     return VIEWER_HTML, 200, {"Content-Type": "text/html"}
 
-# GET /api/prompts — device fetches this on boot
 @app.route("/api/prompts", methods=["GET"])
 def get_prompts():
     with get_db() as db:
         rows = db.execute(
-            "SELECT text FROM prompts WHERE active=1 ORDER BY order_idx ASC"
+            "SELECT camera_text, audio_text FROM prompts "
+            "WHERE active=1 ORDER BY order_idx ASC"
         ).fetchall()
-    return jsonify({"prompts": [r["text"] for r in rows]})
+    return jsonify({
+        "prompts": [
+            {"camera": r["camera_text"], "audio": r["audio_text"]}
+            for r in rows
+        ]
+    })
 
-# POST /api/prompts — you call this to replace the full list remotely
-# Body: { "prompts": ["text one", "text two\nline two", ...] }
 @app.route("/api/prompts", methods=["POST"])
 def set_prompts():
     data = request.get_json(force=True)
@@ -216,10 +209,11 @@ def set_prompts():
         return jsonify({"error": "missing prompts array"}), 400
     with get_db() as db:
         db.execute("DELETE FROM prompts")
-        for i, text in enumerate(data["prompts"]):
+        for i, pair in enumerate(data["prompts"]):
             db.execute(
-                "INSERT INTO prompts (text, active, order_idx) VALUES (?, 1, ?)",
-                (text, i)
+                "INSERT INTO prompts (camera_text, audio_text, active, order_idx) "
+                "VALUES (?, ?, 1, ?)",
+                (pair.get("camera", ""), pair.get("audio", ""), i)
             )
         db.commit()
     return jsonify({"ok": True, "count": len(data["prompts"])})
