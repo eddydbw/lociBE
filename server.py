@@ -45,6 +45,7 @@ def init_db():
         db.execute("""
             CREATE TABLE IF NOT EXISTS prompts (
                 id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_id    TEXT NOT NULL DEFAULT 'lens01',
                 camera_text  TEXT NOT NULL,
                 audio_text   TEXT NOT NULL,
                 active       INTEGER DEFAULT 1,
@@ -55,16 +56,16 @@ def init_db():
         cur = db.execute("SELECT COUNT(*) FROM prompts")
         if cur.fetchone()[0] == 0:
             defaults = [
-                ("Is sugar bad\nfor your teeth?", "Why do you\nthink that?", 0),
-                ("Is school\nimportant?",         "Tell me\nmore.",          1),
-                ("Are screens\nbad for you?",     "What makes\nyou say so?",  2),
-                ("Find something\nSTRANGE",       "Why is it\nstrange?",      3),
-                ("Find something\nOLD",           "How do you\nknow?",        4),
-                ("Find something\nBROKEN",        "What happened\nto it?",    5),
+                ("lens01", "Is sugar bad\nfor your teeth?", "Why do you\nthink that?", 0),
+                ("lens01", "Is school\nimportant?",         "Tell me\nmore.",          1),
+                ("lens01", "Are screens\nbad for you?",     "What makes\nyou say so?",  2),
+                ("lens01", "Find something\nSTRANGE",       "Why is it\nstrange?",      3),
+                ("lens01", "Find something\nOLD",           "How do you\nknow?",        4),
+                ("lens01", "Find something\nBROKEN",        "What happened\nto it?",    5),
             ]
             db.executemany(
-                "INSERT INTO prompts (camera_text, audio_text, active, order_idx) "
-                "VALUES (?, ?, 1, ?)",
+                "INSERT INTO prompts (device_id, camera_text, audio_text, active, order_idx) "
+                "VALUES (?, ?, ?, 1, ?)",
                 defaults
             )
         db.commit()
@@ -201,10 +202,12 @@ def viewer():
 
 @app.route("/api/prompts", methods=["GET"])
 def get_prompts():
+    device_id = request.args.get("device_id", "lens01")
     with get_db() as db:
         rows = db.execute(
             "SELECT camera_text, audio_text FROM prompts "
-            "WHERE active=1 ORDER BY order_idx ASC"
+            "WHERE active=1 AND device_id=? ORDER BY order_idx ASC",
+            (device_id,)
         ).fetchall()
     return jsonify({
         "prompts": [
@@ -218,21 +221,23 @@ def set_prompts():
     data = request.get_json(force=True)
     if not data or "prompts" not in data:
         return jsonify({"error": "missing prompts array"}), 400
+    device_id = data.get("device_id", "lens01")
     with get_db() as db:
-        db.execute("DELETE FROM prompts")
+        db.execute("DELETE FROM prompts WHERE device_id=?", (device_id,))
         for i, pair in enumerate(data["prompts"]):
             db.execute(
-                "INSERT INTO prompts (camera_text, audio_text, active, order_idx) "
-                "VALUES (?, ?, 1, ?)",
-                (pair.get("camera", ""), pair.get("audio", ""), i)
+                "INSERT INTO prompts (device_id, camera_text, audio_text, active, order_idx) "
+                "VALUES (?, ?, ?, 1, ?)",
+                (device_id, pair.get("camera", ""), pair.get("audio", ""), i)
             )
         db.commit()
-    return jsonify({"ok": True, "count": len(data["prompts"])})
+    return jsonify({"ok": True, "count": len(data["prompts"]), "device_id": device_id})
 
 ADMIN_HTML = open(str(BASE_DIR / "admin.html")).read()
 
 @app.route("/admin")
-def admin():
+@app.route("/admin/<device_id>")
+def admin(device_id="lens01"):
     return ADMIN_HTML, 200, {"Content-Type": "text/html"}
 
 @app.route("/api/debug/prompts")
@@ -240,6 +245,12 @@ def debug_prompts():
     with get_db() as db:
         rows = db.execute("SELECT * FROM prompts").fetchall()
     return jsonify([dict(r) for r in rows])
+
+@app.route("/api/reset-db-once-xyz")
+def reset_db_once():
+    DB_PATH.unlink(missing_ok=True)
+    init_db()
+    return jsonify({"ok": True, "message": "database reset"})
 
 if __name__ == "__main__":
     print(f"Loci Lens server → http://0.0.0.0:{PORT}")
