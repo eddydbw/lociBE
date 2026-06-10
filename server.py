@@ -56,10 +56,14 @@ def init_db():
         cur = db.execute("SELECT COUNT(*) FROM steps")
         if cur.fetchone()[0] == 0:
             defaults = [
+                # pair
                 ("lens01", "camera", "Is sugar bad\nfor your teeth?", 0),
                 ("lens01", "audio",  "Why do you\nthink that?",       1),
+                # series: 3 cameras then 1 audio
                 ("lens01", "camera", "Find something\nSTRANGE",       2),
-                ("lens01", "audio",  "Why is it\nstrange?",           3),
+                ("lens01", "camera", "Find something\nOLD",           3),
+                ("lens01", "camera", "Find something\nBROKEN",        4),
+                ("lens01", "audio",  "Tell us about\nall three",      5),
             ]
             db.executemany(
                 "INSERT INTO steps (device_id, step_type, text, order_idx) "
@@ -169,10 +173,17 @@ def attach_audio(capture_id):
 
 @app.route("/api/captures", methods=["GET"])
 def list_captures():
+    device_id = request.args.get("device_id")
     with get_db() as db:
-        rows = db.execute(
-            "SELECT * FROM captures ORDER BY created_at DESC LIMIT 100"
-        ).fetchall()
+        if device_id:
+            rows = db.execute(
+                "SELECT * FROM captures WHERE device_id=? ORDER BY created_at DESC LIMIT 100",
+                (device_id,)
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT * FROM captures ORDER BY created_at DESC LIMIT 100"
+            ).fetchall()
     return jsonify([capture_to_dict(r) for r in rows]), 200
 
 @app.route("/api/captures/<capture_id>", methods=["GET"])
@@ -224,12 +235,18 @@ def set_prompts():
         db.commit()
     return jsonify({"ok": True, "count": len(data["steps"]), "device_id": device_id})
 
-ADMIN_HTML = open(str(BASE_DIR / "admin.html")).read()
+ADMIN_HTML  = open(str(BASE_DIR / "admin.html")).read()
+PARENT_HTML = open(str(BASE_DIR / "parent.html")).read()
 
 @app.route("/admin")
 @app.route("/admin/<device_id>")
 def admin(device_id="lens01"):
     return ADMIN_HTML, 200, {"Content-Type": "text/html"}
+
+@app.route("/parent")
+@app.route("/parent/<device_id>")
+def parent(device_id="lens01"):
+    return PARENT_HTML, 200, {"Content-Type": "text/html"}
 
 @app.route("/api/debug/prompts")
 def debug_prompts():

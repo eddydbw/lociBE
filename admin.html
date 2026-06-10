@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Loci — Prompts</title>
+<title>Loci — Steps</title>
 <link href="https://fonts.googleapis.com/css2?family=Coming+Soon&family=Mansalva&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,30 +28,31 @@
     font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--muted); margin-bottom: 16px;
   }
-  #prompt-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
-  .pair {
+  #step-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .step {
     border: 1.5px solid var(--border); border-radius: 12px;
-    padding: 14px; display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 14px; display: flex; gap: 10px; align-items: center;
     background: var(--bg);
   }
-  .drag-handle { color: var(--muted); font-size: 18px; padding-top: 24px; cursor: grab; user-select: none; }
-  .pair-fields { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-  .field-group { display: flex; flex-direction: column; gap: 4px; }
-  .field-label {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  .drag-handle { color: var(--muted); font-size: 18px; cursor: grab; user-select: none; flex-shrink: 0; }
+  .type-select {
+    font-family: 'Coming Soon', cursive, sans-serif; font-size: 13px; font-weight: bold;
+    border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 8px;
+    background: white; outline: none; cursor: pointer; flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
   }
-  .field-label.camera { color: var(--orange); }
-  .field-label.audio  { color: var(--purple); }
+  .type-select.camera { color: var(--orange); border-color: var(--orange); }
+  .type-select.audio  { color: var(--purple); border-color: var(--purple); }
   textarea {
     font-family: 'Coming Soon', cursive, sans-serif; font-size: 14px;
     color: var(--text); background: white; border: 1.5px solid var(--border);
     border-radius: 8px; padding: 8px 10px; resize: vertical; min-height: 44px;
-    line-height: 1.5; outline: none; transition: border-color 0.15s;
+    line-height: 1.5; outline: none; transition: border-color 0.15s; flex: 1;
   }
   textarea:focus { border-color: var(--purple); }
   .btn-remove {
     background: none; border: none; color: var(--muted); font-size: 20px;
-    cursor: pointer; padding: 22px 4px 0; line-height: 1; transition: color 0.15s;
+    cursor: pointer; line-height: 1; transition: color 0.15s; flex-shrink: 0;
   }
   .btn-remove:hover { color: var(--pink); }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -62,10 +63,10 @@
   }
   .btn:active { transform: scale(0.97); }
   .btn:hover { opacity: 0.88; }
-  .btn-add { background: var(--bg); border: 1.5px solid var(--border); color: var(--purple); }
+  .btn-add  { background: var(--bg); border: 1.5px solid var(--border); color: var(--purple); }
   .btn-save { background: var(--yellow); color: var(--text); }
   .status { margin-top: 14px; font-size: 13px; color: var(--muted); min-height: 20px; }
-  .status.ok { color: var(--purple); }
+  .status.ok    { color: var(--purple); }
   .status.error { color: var(--pink); }
   .hint { max-width: 720px; margin: 16px auto 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
   a { color: var(--purple); }
@@ -75,66 +76,68 @@
 
 <div class="header">
   <h1>Loci</h1>
-  <span class="subtitle">prompt editor — <a href="/">view captures</a></span>
+  <span class="subtitle" id="subtitle">step editor — <a href="/">view captures</a></span>
 </div>
 
 <div class="card">
-  <div class="section-label">Prompt pairs — camera prompt shows first, audio prompt before recording</div>
-  <div id="prompt-list"><div class="status">Loading...</div></div>
+  <div class="section-label">Step sequence — camera steps take photos, audio steps record voice</div>
+  <div id="step-list"><div class="status">Loading...</div></div>
   <div class="actions">
-    <button class="btn btn-add" onclick="addPair()">+ add pair</button>
-    <button class="btn btn-save" onclick="savePrompts()">save to device</button>
+    <button class="btn btn-add" onclick="addStep()">+ add step</button>
+    <button class="btn btn-save" onclick="saveSteps()">save to device</button>
   </div>
   <div class="status" id="status"></div>
 </div>
 
 <p class="hint">
   Use <code>\n</code> for a line break — the device shows each line separately.<br>
-  The <strong style="color:var(--orange)">camera</strong> prompt appears before the photo. The <strong style="color:var(--purple)">audio</strong> prompt appears before voice recording.<br>
-  Changes take effect next time the lens boots and connects to WiFi.
+  <strong style="color:var(--orange)">camera</strong> steps take a photo.
+  <strong style="color:var(--purple)">audio</strong> steps record voice.<br>
+  Drag rows to reorder. Changes take effect next time the lens boots and connects to WiFi.
 </p>
 
 <script>
-  const list = document.getElementById('prompt-list');
-  const statusEl = document.getElementById('status');
+  const list      = document.getElementById('step-list');
+  const statusEl  = document.getElementById('status');
+  const deviceId  = location.pathname.split('/').filter(Boolean)[1] || 'lens01';
+
+  document.getElementById('subtitle').innerHTML =
+    `step editor [${deviceId}] — <a href="/">view captures</a>`;
 
   async function load() {
     try {
-      const res = await fetch('/api/prompts');
+      const res  = await fetch(`/api/prompts?device_id=${encodeURIComponent(deviceId)}`);
       const data = await res.json();
-      render(data.prompts || []);
+      render(data.steps || []);
     } catch (e) {
-      list.innerHTML = '<div class="status error">Failed to load prompts</div>';
+      list.innerHTML = '<div class="status error">Failed to load steps</div>';
     }
   }
 
-  function render(prompts) {
+  function render(steps) {
     list.innerHTML = '';
-    if (prompts.length === 0) { addPair(); return; }
-    prompts.forEach(p => addPair(
-      (p.camera || '').replace(/\n/g, '\\n'),
-      (p.audio  || '').replace(/\n/g, '\\n')
-    ));
+    if (steps.length === 0) { addStep(); return; }
+    steps.forEach(s => addStep(s.type, (s.text || '').replace(/\n/g, '\\n')));
   }
 
-  function addPair(camera = '', audio = '') {
+  function colorSelect(sel) {
+    sel.className = 'type-select ' + sel.value;
+  }
+
+  function addStep(type = 'camera', text = '') {
     const row = document.createElement('div');
-    row.className = 'pair';
+    row.className = 'step';
     row.draggable = true;
     row.innerHTML = `
       <span class="drag-handle" title="drag to reorder">⠿</span>
-      <div class="pair-fields">
-        <div class="field-group">
-          <span class="field-label camera">camera prompt</span>
-          <textarea placeholder="Find something\nSTRANGE">${camera}</textarea>
-        </div>
-        <div class="field-group">
-          <span class="field-label audio">audio prompt</span>
-          <textarea placeholder="Why is it\nstrange?">${audio}</textarea>
-        </div>
-      </div>
-      <button class="btn-remove" title="remove" onclick="this.closest('.pair').remove()">×</button>
+      <select class="type-select" onchange="colorSelect(this)">
+        <option value="camera"${type === 'camera' ? ' selected' : ''}>camera</option>
+        <option value="audio"${type  === 'audio'  ? ' selected' : ''}>audio</option>
+      </select>
+      <textarea placeholder="Enter prompt text…">${text}</textarea>
+      <button class="btn-remove" title="remove" onclick="this.closest('.step').remove()">×</button>
     `;
+    colorSelect(row.querySelector('.type-select'));
 
     row.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
@@ -144,38 +147,36 @@
     row.addEventListener('dragend', () => { row.style.opacity = ''; list._dragging = null; });
     row.addEventListener('dragover', e => {
       e.preventDefault();
-      const dragging = list._dragging;
-      if (!dragging || dragging === row) return;
-      const rect = row.getBoundingClientRect();
-      const mid = rect.top + rect.height / 2;
-      if (e.clientY < mid) list.insertBefore(dragging, row);
-      else list.insertBefore(dragging, row.nextSibling);
+      const d = list._dragging;
+      if (!d || d === row) return;
+      const mid = row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+      if (e.clientY < mid) list.insertBefore(d, row);
+      else list.insertBefore(d, row.nextSibling);
     });
 
     list.appendChild(row);
   }
 
-  async function savePrompts() {
-    const pairs = list.querySelectorAll('.pair');
-    const prompts = [];
-    pairs.forEach(pair => {
-      const tas = pair.querySelectorAll('textarea');
-      const camera = tas[0].value.trim().replace(/\\n/g, '\n');
-      const audio  = tas[1].value.trim().replace(/\\n/g, '\n');
-      if (camera || audio) prompts.push({ camera, audio });
+  async function saveSteps() {
+    const rows  = list.querySelectorAll('.step');
+    const steps = [];
+    rows.forEach(row => {
+      const type = row.querySelector('.type-select').value;
+      const text = row.querySelector('textarea').value.trim().replace(/\\n/g, '\n');
+      if (text) steps.push({ type, text });
     });
 
-    if (prompts.length === 0) { setStatus('Add at least one pair first.', 'error'); return; }
-    setStatus('Saving...');
+    if (steps.length === 0) { setStatus('Add at least one step first.', 'error'); return; }
+    setStatus('Saving…');
 
     try {
-      const res = await fetch('/api/prompts', {
-        method: 'POST',
+      const res  = await fetch('/api/prompts', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompts })
+        body:    JSON.stringify({ device_id: deviceId, steps }),
       });
       const data = await res.json();
-      if (data.ok) setStatus(`Saved ${data.count} pair${data.count !== 1 ? 's' : ''}. Device picks these up on next boot.`, 'ok');
+      if (data.ok) setStatus(`Saved ${data.count} step${data.count !== 1 ? 's' : ''}. Device picks these up on next boot.`, 'ok');
       else setStatus('Save failed: ' + JSON.stringify(data), 'error');
     } catch (e) {
       setStatus('Network error — ' + e.message, 'error');
@@ -183,8 +184,8 @@
   }
 
   function setStatus(msg, type = '') {
-    statusEl.textContent = msg;
-    statusEl.className = 'status ' + type;
+    statusEl.textContent  = msg;
+    statusEl.className    = 'status ' + type;
   }
 
   load();

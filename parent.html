@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Loci — For Parents</title>
+<link href="https://fonts.googleapis.com/css2?family=Coming+Soon&family=Mansalva&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #FFF9F0; --text: #2D1B69; --muted: #9B8EC4;
+    --pink: #FF2D78; --yellow: #FFD700; --orange: #FF6B35;
+    --purple: #7C3AED; --border: rgba(124,58,237,0.2);
+  }
+  body {
+    font-family: 'Coming Soon', cursive, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding-bottom: 64px;
+    max-width: 600px; margin: 0 auto;
+  }
+  .header {
+    padding: 28px 20px 18px;
+    display: flex; align-items: baseline; gap: 12px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  h1 { font-family: 'Mansalva', cursive; font-size: 28px; color: var(--pink); }
+  .subtitle { font-size: 13px; color: var(--muted); }
+  #captures { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+  .msg { font-size: 14px; color: var(--muted); text-align: center; padding: 48px 0; }
+  .msg.error { color: var(--pink); }
+
+  .capture-card {
+    background: white; border: 1.5px solid var(--border); border-radius: 16px;
+    overflow: hidden;
+  }
+  .card-photo { width: 100%; display: block; object-fit: cover; max-height: 340px; }
+  .card-body { padding: 16px; }
+  .card-time { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .card-prompt {
+    font-size: 15px; color: var(--text); margin-bottom: 14px;
+    line-height: 1.5; border-left: 3px solid var(--orange); padding-left: 10px;
+  }
+  audio.card-audio {
+    width: 100%; display: block; margin-bottom: 14px; border-radius: 8px;
+    accent-color: var(--purple);
+  }
+  .starters { border-top: 1.5px solid var(--border); padding-top: 12px; }
+  .starters-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .starter {
+    font-size: 13px; color: var(--purple); padding: 7px 0;
+    border-bottom: 1px dashed var(--border); line-height: 1.4;
+  }
+  .starter:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Loci</h1>
+  <span class="subtitle" id="subtitle">your child's discoveries</span>
+</div>
+
+<div id="captures"><div class="msg">Loading…</div></div>
+
+<script>
+  const deviceId = location.pathname.split('/').filter(Boolean)[1] || 'lens01';
+  document.getElementById('subtitle').textContent = `discoveries — ${deviceId}`;
+
+  // Conversation starters — swap this function for something smarter later
+  const STARTERS = [
+    "Ask them: what made you choose this?",
+    "Ask them: would you want this to change?",
+    "Ask them: what would you have picked instead?",
+    "Ask them: what does this remind you of?",
+    "Ask them: would everyone in the family agree?",
+    "Ask them: who else should see this?",
+    "Ask them: what would you want to know more about?",
+    "Ask them: was this easy or hard to find?",
+    "Ask them: does this make you happy, sad, or something else?",
+    "Ask them: what's the most interesting thing about it?",
+    "Ask them: if this could talk, what would it say?",
+    "Ask them: where does this belong?",
+  ];
+
+  function getConversationStarters(capture, index) {
+    const offset = (index * 3) % STARTERS.length;
+    return [0, 1, 2].map(i => STARTERS[(offset + i) % STARTERS.length]);
+  }
+
+  function relativeTime(createdAt) {
+    const now   = new Date();
+    const then  = new Date(createdAt * 1000);
+    const days  = Math.floor((now - then) / 86400000);
+    const clock = then.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+    if (days === 0) return `today ${clock}`;
+    if (days === 1) return `yesterday ${clock}`;
+    return then.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ` ${clock}`;
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function buildCard(capture, index) {
+    const starters = getConversationStarters(capture, index);
+    const photo = capture.photo_url
+      ? `<img src="${esc(capture.photo_url)}" class="card-photo" alt="capture" loading="lazy" />`
+      : '';
+    const prompt = capture.prompt
+      ? `<p class="card-prompt">${esc(capture.prompt).replace(/\n/g, '<br>')}</p>`
+      : '';
+    const audio = capture.audio_url
+      ? `<audio controls class="card-audio" src="${esc(capture.audio_url)}"></audio>`
+      : '';
+    return `
+      <div class="capture-card">
+        ${photo}
+        <div class="card-body">
+          <div class="card-time">${esc(relativeTime(capture.created_at))}</div>
+          ${prompt}
+          ${audio}
+          <div class="starters">
+            <div class="starters-label">talk about it</div>
+            ${starters.map(s => `<div class="starter">${esc(s)}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function load() {
+    const el = document.getElementById('captures');
+    try {
+      const res      = await fetch(`/api/captures?device_id=${encodeURIComponent(deviceId)}`);
+      const captures = await res.json();
+      if (!captures.length) {
+        el.innerHTML = '<div class="msg">No captures yet for this device.</div>';
+        return;
+      }
+      el.innerHTML = captures.map(buildCard).join('');
+    } catch (e) {
+      el.innerHTML = '<div class="msg error">Failed to load captures.</div>';
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
