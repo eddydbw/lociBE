@@ -75,7 +75,7 @@
 
 <div class="header">
   <h1>Loci</h1>
-  <span class="subtitle">editing <strong id="device-label">lens01</strong> — <a href="/">view captures</a></span>
+  <span class="subtitle">prompt editor — <a href="/">view captures</a></span>
 </div>
 
 <div class="card">
@@ -98,13 +98,9 @@
   const list = document.getElementById('prompt-list');
   const statusEl = document.getElementById('status');
 
-  const pathParts = window.location.pathname.split('/').filter(Boolean);
-  const deviceId = pathParts.length > 1 ? pathParts[1] : 'lens01';
-  document.getElementById('device-label').textContent = deviceId;
-
   async function load() {
     try {
-      const res = await fetch('/api/prompts?device_id=' + encodeURIComponent(deviceId));
+      const res = await fetch('/api/prompts');
       const data = await res.json();
       render(data.prompts || []);
     } catch (e) {
@@ -176,7 +172,7 @@
       const res = await fetch('/api/prompts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompts, device_id: deviceId })
+        body: JSON.stringify({ prompts })
       });
       const data = await res.json();
       if (data.ok) setStatus(`Saved ${data.count} pair${data.count !== 1 ? 's' : ''}. Device picks these up on next boot.`, 'ok');

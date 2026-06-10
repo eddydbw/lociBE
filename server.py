@@ -42,31 +42,28 @@ def init_db():
                 created_at  REAL
             )
         """)
+        db.execute("DROP TABLE IF EXISTS prompts")
         db.execute("""
-            CREATE TABLE IF NOT EXISTS prompts (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                device_id    TEXT NOT NULL DEFAULT 'lens01',
-                camera_text  TEXT NOT NULL,
-                audio_text   TEXT NOT NULL,
-                active       INTEGER DEFAULT 1,
-                order_idx    INTEGER DEFAULT 0
+            CREATE TABLE IF NOT EXISTS steps (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_id  TEXT NOT NULL DEFAULT 'lens01',
+                step_type  TEXT NOT NULL,
+                text       TEXT NOT NULL,
+                order_idx  INTEGER DEFAULT 0
             )
         """)
 
-        cur = db.execute("SELECT COUNT(*) FROM prompts")
+        cur = db.execute("SELECT COUNT(*) FROM steps")
         if cur.fetchone()[0] == 0:
             defaults = [
-                ("lens01", "Is sugar bad\nfor your teeth?", "Why do you\nthink that?", 0),
-                ("lens01", "Is school\nimportant?",         "Tell me\nmore.",          1),
-                ("lens01", "Are screens\nbad for you?",     "What makes\nyou say so?",  2),
-                ("lens01", "Find something\nSTRANGE",       "Why is it\nstrange?",      3),
-                ("lens01", "Find something\nOLD",           "How do you\nknow?",        4),
-                ("lens01", "Find something\nBROKEN",        "What happened\nto it?",    5),
+                ("lens01", "camera", "Is sugar bad\nfor your teeth?", 0),
+                ("lens01", "audio",  "Why do you\nthink that?",       1),
+                ("lens01", "camera", "Find something\nSTRANGE",       2),
+                ("lens01", "audio",  "Why is it\nstrange?",           3),
             ]
             db.executemany(
-                "INSERT INTO prompts (device_id, camera_text, audio_text, active, order_idx) "
-                "VALUES (?, ?, ?, 1, ?)",
-                defaults
+                "INSERT INTO steps (device_id, step_type, text, order_idx) "
+                "VALUES (?, ?, ?, ?)", defaults
             )
         db.commit()
 
@@ -205,33 +202,27 @@ def get_prompts():
     device_id = request.args.get("device_id", "lens01")
     with get_db() as db:
         rows = db.execute(
-            "SELECT camera_text, audio_text FROM prompts "
-            "WHERE active=1 AND device_id=? ORDER BY order_idx ASC",
-            (device_id,)
+            "SELECT step_type, text FROM steps "
+            "WHERE device_id=? ORDER BY order_idx ASC", (device_id,)
         ).fetchall()
-    return jsonify({
-        "prompts": [
-            {"camera": r["camera_text"], "audio": r["audio_text"]}
-            for r in rows
-        ]
-    })
+    return jsonify({"steps": [{"type": r["step_type"], "text": r["text"]} for r in rows]})
 
 @app.route("/api/prompts", methods=["POST"])
 def set_prompts():
     data = request.get_json(force=True)
-    if not data or "prompts" not in data:
-        return jsonify({"error": "missing prompts array"}), 400
+    if not data or "steps" not in data:
+        return jsonify({"error": "missing steps array"}), 400
     device_id = data.get("device_id", "lens01")
     with get_db() as db:
-        db.execute("DELETE FROM prompts WHERE device_id=?", (device_id,))
-        for i, pair in enumerate(data["prompts"]):
+        db.execute("DELETE FROM steps WHERE device_id=?", (device_id,))
+        for i, step in enumerate(data["steps"]):
             db.execute(
-                "INSERT INTO prompts (device_id, camera_text, audio_text, active, order_idx) "
-                "VALUES (?, ?, ?, 1, ?)",
-                (device_id, pair.get("camera", ""), pair.get("audio", ""), i)
+                "INSERT INTO steps (device_id, step_type, text, order_idx) "
+                "VALUES (?, ?, ?, ?)",
+                (device_id, step.get("type", "camera"), step.get("text", ""), i)
             )
         db.commit()
-    return jsonify({"ok": True, "count": len(data["prompts"]), "device_id": device_id})
+    return jsonify({"ok": True, "count": len(data["steps"]), "device_id": device_id})
 
 ADMIN_HTML = open(str(BASE_DIR / "admin.html")).read()
 
@@ -243,7 +234,7 @@ def admin(device_id="lens01"):
 @app.route("/api/debug/prompts")
 def debug_prompts():
     with get_db() as db:
-        rows = db.execute("SELECT * FROM prompts").fetchall()
+        rows = db.execute("SELECT * FROM steps").fetchall()
     return jsonify([dict(r) for r in rows])
 
 @app.route("/api/reset-db-once-xyz")
