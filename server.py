@@ -77,7 +77,7 @@ init_db()
 # Demo script — fixed narrative for parent page
 # ---------------------------------------------------------------------------
 DEMO_SCRIPT = {
-    "lens01": {
+    "demo": {
         "topic": "Aesthetics",
         "child": "Ethan",
         "routes": [
