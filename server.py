@@ -73,6 +73,104 @@ def init_db():
 
 init_db()
 
+# ---------------------------------------------------------------------------
+# Demo script — fixed narrative for parent page
+# ---------------------------------------------------------------------------
+DEMO_SCRIPT = {
+    "lens01": {
+        "topic": "Aesthetics",
+        "child": "Ethan",
+        "routes": [
+            {
+                "title": "Is it beautiful to you?",
+                "dot": "var(--yellow)",
+                "nodes": [
+                    {
+                        "medium": "cam",
+                        "challenge": False,
+                        "prompt": "Find the most beautiful thing in this room",
+                        "opener": "He chose this above everything else. Ask: <b>“What made this the most beautiful — out of everything in the room?”</b>",
+                        "moves": [
+                            "Ask: “Would your friend have picked the same thing?”",
+                            "Try: “Is it beautiful, or just your favourite? Are those different?”",
+                        ],
+                    },
+                    {
+                        "medium": "aud",
+                        "challenge": False,
+                        "prompt": "What’s something most people call ugly that you secretly like?",
+                        "opener": "Listen back together first, then ask: <b>“Why do you think other people don’t see it the way you do?”</b>",
+                        "moves": [
+                            "Ask: “Does it being ‘ugly’ to others change how you feel about it?”",
+                            "Turn it round: “Is there something everyone loves that you don’t?”",
+                        ],
+                    },
+                    {
+                        "medium": "play",
+                        "challenge": False,
+                        "prompt": "Look at one thing up close, then far away — does it change?",
+                        "activity": "Ethan studied a leaf with the lens — up close, then from across the room.",
+                        "opener": "<b>“Was it more beautiful close up or far away — and why?”</b>",
+                        "moves": [
+                            "Ask: “Can how you look at something change whether it’s beautiful?”",
+                            "Ask: “Is the beauty in the leaf, or in how you’re seeing it?”",
+                        ],
+                    },
+                    {
+                        "medium": "cam",
+                        "challenge": True,
+                        "prompt": "Photograph something beautiful that isn’t pretty",
+                        "opener": "A tricky one — beauty without prettiness. Ask: <b>“What’s the difference between beautiful and pretty?”</b>",
+                        "moves": [
+                            "Ask: “Can something sad or broken still be beautiful?”",
+                            "Ask: “Is a storm beautiful? A scar?”",
+                        ],
+                    },
+                ],
+            },
+            {
+                "title": "Does everyone agree?",
+                "dot": "var(--blue)",
+                "nodes": [
+                    {
+                        "medium": "cam",
+                        "challenge": False,
+                        "prompt": "Photograph a colour you could look at forever",
+                        "opener": "<b>“Why this colour and not another — can you say what it is about it?”</b>",
+                        "moves": [
+                            "Ask: “Could a colour ever be ugly? Which one, and to who?”",
+                            "Ask: “Do you think I’d choose the same colour?”",
+                        ],
+                    },
+                    {
+                        "medium": "aud",
+                        "challenge": True,
+                        "prompt": "Argue your favourite song is the best ever — then argue it isn’t",
+                        "opener": "He had to take both sides. Ask: <b>“If people disagree, can a song still be ‘the best’?”</b>",
+                        "moves": [
+                            "Ask: “Is there a best song, or just your best song?”",
+                            "Ask: “Did arguing the other side change anything?”",
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+}
+
+
+def format_audio_duration(audio_path):
+    try:
+        size = Path(audio_path).stat().st_size
+        pcm_bytes = max(0, size - 44)
+        seconds = pcm_bytes / (8000 * 2)
+        m = int(seconds // 60)
+        s = int(seconds % 60)
+        return f"{m}:{s:02d}"
+    except Exception:
+        return "0:00"
+
+
 def capture_to_dict(row):
     d = dict(row)
     if d.get("photo_path"):
@@ -253,6 +351,83 @@ def debug_prompts():
     with get_db() as db:
         rows = db.execute("SELECT * FROM steps").fetchall()
     return jsonify([dict(r) for r in rows])
+
+@app.route("/api/parent/<device_id>")
+def parent_data(device_id):
+    script = DEMO_SCRIPT.get(device_id)
+    if not script:
+        return jsonify({"error": "unknown device"}), 404
+
+    with get_db() as db:
+        rows = db.execute(
+            "SELECT * FROM captures WHERE device_id=? ORDER BY created_at ASC",
+            (device_id,)
+        ).fetchall()
+    captures = [dict(r) for r in rows]
+
+    cam_queue = [c for c in captures if c.get("photo_path")]
+    aud_queue = [c for c in captures if c.get("audio_path")]
+    cam_idx = 0
+    aud_idx = 0
+
+    out_routes = []
+    for route in script["routes"]:
+        out_nodes = []
+        for node in route["nodes"]:
+            n = {
+                "medium":    node["medium"],
+                "challenge": node["challenge"],
+                "prompt":    node["prompt"],
+                "opener":    node["opener"],
+                "moves":     node["moves"],
+            }
+            if node["medium"] == "cam":
+                if cam_idx < len(cam_queue):
+                    c = cam_queue[cam_idx]
+                    n["photo"] = f"/uploads/photos/{Path(c['photo_path']).name}"
+                    n["tag"]   = f"{script['child']}’s photo"
+                    cam_idx += 1
+                else:
+                    n["pending"] = True
+            elif node["medium"] == "aud":
+                if aud_idx < len(aud_queue):
+                    c = aud_queue[aud_idx]
+                    n["audio"]     = format_audio_duration(c["audio_path"])
+                    n["audio_url"] = f"/uploads/audio/{Path(c['audio_path']).name}"
+                    aud_idx += 1
+                else:
+                    n["pending"] = True
+            elif node["medium"] == "play":
+                n["activity"] = node.get("activity", "")
+            out_nodes.append(n)
+        out_routes.append({"title": route["title"], "dot": route["dot"], "nodes": out_nodes})
+
+    return jsonify({"topic": script["topic"], "child": script["child"], "routes": out_routes})
+
+
+@app.route("/api/demo/reset/<device_id>", methods=["POST"])
+def demo_reset(device_id):
+    with get_db() as db:
+        rows = db.execute(
+            "SELECT photo_path, audio_path FROM captures WHERE device_id=?",
+            (device_id,)
+        ).fetchall()
+        n = len(rows)
+        for row in rows:
+            if row["photo_path"]:
+                try:
+                    Path(row["photo_path"]).unlink(missing_ok=True)
+                except Exception:
+                    pass
+            if row["audio_path"]:
+                try:
+                    Path(row["audio_path"]).unlink(missing_ok=True)
+                except Exception:
+                    pass
+        db.execute("DELETE FROM captures WHERE device_id=?", (device_id,))
+        db.commit()
+    return jsonify({"ok": True, "cleared": n})
+
 
 @app.route("/api/reset-db-once-xyz")
 def reset_db_once():

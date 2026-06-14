@@ -1,156 +1,380 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Loci — For Parents</title>
-<link href="https://fonts.googleapis.com/css2?family=Coming+Soon&family=Mansalva&display=swap" rel="stylesheet" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loci</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mansalva&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #FFF9F0; --text: #2D1B69; --muted: #9B8EC4;
-    --pink: #FF2D78; --yellow: #FFD700; --orange: #FF6B35;
-    --purple: #7C3AED; --border: rgba(124,58,237,0.2);
+  :root{
+    --bg:#FFFDF4;
+    --card:#FFFFFF;
+    --ink:#1A1712;
+    --ink-2:#6B6456;
+    --line:#EFEADB;
+    --on-dark:#241F17;
+    --on-dark-soft:#857C6C;
+    --blue:#4E90FF;
+    --yellow:#FEE751;
+    --coral:#FF6C4E;
+    --radius:22px;
+    --disp:"Outfit",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --body:"Outfit",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   }
-  body {
-    font-family: 'Coming Soon', cursive, sans-serif;
-    background: var(--bg); color: var(--text);
-    min-height: 100vh; padding-bottom: 64px;
-    max-width: 600px; margin: 0 auto;
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:#1A1A22;min-height:100vh;font-family:var(--body);
+    display:flex;justify-content:center;align-items:flex-start;
+    padding:30px 16px;-webkit-font-smoothing:antialiased;
   }
-  .header {
-    padding: 28px 20px 18px;
-    display: flex; align-items: baseline; gap: 12px;
-    border-bottom: 1.5px solid var(--border);
-  }
-  h1 { font-family: 'Mansalva', cursive; font-size: 28px; color: var(--pink); }
-  .subtitle { font-size: 13px; color: var(--muted); }
-  #captures { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
-  .msg { font-size: 14px; color: var(--muted); text-align: center; padding: 48px 0; }
-  .msg.error { color: var(--pink); }
 
-  .capture-card {
-    background: white; border: 1.5px solid var(--border); border-radius: 16px;
-    overflow: hidden;
-  }
-  .card-photo { width: 100%; display: block; object-fit: cover; max-height: 340px; }
-  .card-body { padding: 16px; }
-  .card-time { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
-  .card-prompt {
-    font-size: 15px; color: var(--text); margin-bottom: 14px;
-    line-height: 1.5; border-left: 3px solid var(--orange); padding-left: 10px;
-  }
-  audio.card-audio {
-    width: 100%; display: block; margin-bottom: 14px; border-radius: 8px;
-    accent-color: var(--purple);
-  }
-  .starters { border-top: 1.5px solid var(--border); padding-top: 12px; }
-  .starters-label {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--muted); margin-bottom: 8px;
-  }
-  .starter {
-    font-size: 13px; color: var(--purple); padding: 7px 0;
-    border-bottom: 1px dashed var(--border); line-height: 1.4;
-  }
-  .starter:last-child { border-bottom: none; }
+  /* ---- phone ---- */
+  .phone{width:100%;max-width:412px;background:#000;border-radius:46px;padding:9px;
+    box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05)}
+  .screen{position:relative;background:var(--bg);border-radius:38px;overflow:hidden;
+    height:846px;display:flex;flex-direction:column}
+  .screen::before,.screen::after{content:"";position:absolute;border-radius:50%;
+    filter:blur(70px);z-index:0;pointer-events:none}
+  .screen::before{width:300px;height:300px;top:-110px;right:-110px;
+    background:radial-gradient(circle,rgba(254,231,81,.35),transparent 70%)}
+  .screen::after{width:320px;height:320px;bottom:120px;left:-130px;
+    background:radial-gradient(circle,rgba(255,108,78,.14),transparent 70%)}
+  .screen>*{position:relative;z-index:1}
+
+  .statusbar{height:46px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:14px;font-weight:700;color:var(--on-dark);font-family:var(--body)}
+  .statusbar .dots{display:flex;gap:5px}
+  .statusbar .dots span{width:5px;height:5px;border-radius:50%;background:var(--on-dark);opacity:.55}
+  .scroll{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain}
+  .scroll::-webkit-scrollbar{width:0}
+  .homebar{flex:0 0 auto;height:28px;display:flex;justify-content:center;align-items:center}
+  .homebar::after{content:"";width:132px;height:5px;border-radius:3px;background:#241F17;opacity:.35}
+
+  /* ---- top utility + header ---- */
+  .util{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 22px 2px}
+  .util-right{display:flex;gap:14px}
+  .logo{font-family:"Mansalva",cursive;font-size:27px;line-height:1;color:var(--ink)}
+  .ico{width:38px;height:38px;border-radius:50%;border:1px solid rgba(26,23,18,.14);
+    display:flex;align-items:center;justify-content:center;color:var(--on-dark);
+    background:rgba(26,23,18,.03);cursor:pointer;transition:.18s}
+  .ico:hover{background:rgba(26,23,18,.07)}
+  .ico svg{width:18px;height:18px}
+  .util-right .ico{border:none;color:#fff;background:var(--blue);box-shadow:0 5px 13px rgba(78,144,255,.30)}
+  .util-right .ico:hover{background:#3D82F5}
+  .util-right .ico:active{transform:scale(.94)}
+  .ico-reset{background:rgba(26,23,18,.05) !important;color:var(--on-dark-soft) !important;
+    box-shadow:none !important;border:1px solid rgba(26,23,18,.10) !important}
+  .ico-reset:hover{background:rgba(255,108,78,.12) !important;color:var(--coral) !important}
+
+  .header{padding:14px 22px 22px;display:flex;align-items:flex-start;justify-content:space-between}
+  .sticker{display:inline-block;background:var(--yellow);color:#1A1606;
+    font-family:var(--disp);font-weight:800;font-size:38px;line-height:1;letter-spacing:-.02em;
+    padding:12px 18px 14px;border-radius:14px;transform:rotate(-1.6deg);
+    box-shadow:0 10px 24px rgba(254,231,81,.18)}
+  .who{font-family:var(--body);font-size:15px;color:var(--on-dark);margin:16px 2px 0}
+  .who b{font-weight:700}
+  .reassure{font-size:13px;color:var(--on-dark-soft);margin:5px 2px 0}
+  .header .ico{margin-top:6px}
+
+  .body{padding:4px 18px 30px}
+
+  /* ---- route ---- */
+  .route{margin-bottom:10px}
+  .route-label{display:flex;align-items:center;gap:9px;margin:18px 6px 14px}
+  .route-label .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .route-label .num{font-family:var(--disp);font-weight:700;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--on-dark-soft)}
+  .route-label .title{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--on-dark)}
+
+  /* journey thread + nodes */
+  .rnodes{position:relative}
+  .rnodes::before{content:"";position:absolute;left:29px;top:18px;bottom:18px;width:2px;border-radius:2px;
+    background:linear-gradient(180deg,rgba(26,23,18,.16),rgba(26,23,18,.05));z-index:0}
+  .node{position:relative;margin-bottom:24px;opacity:0;transform:translateY(14px);
+    animation:rise .5s cubic-bezier(.2,.7,.2,1) forwards}
+  .node.no-anim{opacity:1;transform:none;animation:none}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  .nbadge{position:absolute;left:5px;top:15px;width:50px;height:50px;border-radius:50%;z-index:3;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 14px rgba(40,34,20,.20),0 0 0 4px var(--bg)}
+  .nbadge svg{width:24px;height:24px}
+  .nbadge.cam{background:var(--yellow);color:#1A1606}
+  .nbadge.aud{background:var(--blue);color:#fff}
+  .nbadge.play{background:var(--coral);color:#fff}
+  .nbadge .star{position:absolute;right:-3px;bottom:-3px;width:22px;height:22px;border-radius:50%;
+    background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 3px var(--bg)}
+  .nbadge .star svg{width:12px;height:12px}
+
+  .ncard{margin-left:60px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 2px 4px rgba(40,34,20,.04),0 16px 34px rgba(40,34,20,.10);transition:transform .15s ease}
+  .ncard:active{transform:scale(.992)}
+  .ncard-top{padding:18px 18px 16px}
+  .chal-pill{display:inline-flex;align-items:center;gap:5px;background:var(--coral);color:#fff;
+    font-family:var(--disp);font-weight:700;font-size:11px;letter-spacing:.04em;
+    padding:5px 10px;border-radius:999px;margin-bottom:11px}
+  .chal-pill svg{width:12px;height:12px}
+  .ptitle{font-family:var(--disp);font-weight:700;font-size:21px;line-height:1.22;letter-spacing:-.01em;
+    color:var(--ink);margin:0 0 14px}
+
+  .photo{display:block;width:100%;aspect-ratio:5/4;border-radius:14px;object-fit:cover;
+    background-size:cover;background-position:center;position:relative}
+  .photo .tag{position:absolute;left:9px;bottom:9px;font-size:11px;font-weight:600;color:#fff;
+    background:rgba(10,10,12,.6);padding:4px 9px;border-radius:7px;backdrop-filter:blur(3px)}
+
+  .audio{display:flex;align-items:center;gap:13px;background:#F4F7FF;border:1px solid #E1EAFF;
+    border-radius:14px;padding:12px 14px}
+  .audio button{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:none;background:var(--blue);
+    color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+  .audio button:active{transform:scale(.92)}
+  .audio button svg{width:18px;height:18px}
+  .wave{flex:1 1 auto;display:flex;align-items:center;gap:3px;height:30px}
+  .wave i{flex:1 1 auto;background:var(--blue);opacity:.32;border-radius:2px;display:block}
+  .audio .dur{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums}
+
+  .activity{display:flex;gap:11px;align-items:flex-start;background:#FFF3F0;border:1px solid #FFDDD4;
+    border-radius:14px;padding:13px 15px;font-size:14px;color:#933A28;line-height:1.45}
+  .activity svg{flex:0 0 auto;width:18px;height:18px;color:var(--coral);margin-top:1px}
+
+  .pending{display:flex;align-items:center;justify-content:center;height:72px;border-radius:14px;
+    border:1.5px dashed rgba(26,23,18,.15);font-size:13px;color:var(--on-dark-soft);
+    background:rgba(26,23,18,.02)}
+
+  /* talk footer = expandable */
+  details.t{border-top:1px solid var(--line)}
+  details.t summary{list-style:none;cursor:pointer;display:flex;align-items:stretch}
+  details.t summary::-webkit-details-marker{display:none}
+  .talk{flex:1 1 auto;padding:16px 18px;font-family:var(--disp);font-weight:700;font-size:15px;color:var(--ink)}
+  .chev{flex:0 0 auto;width:58px;border-left:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-2);transition:transform .22s ease}
+  details[open].t .chev{transform:rotate(180deg)}
+  .chev svg{width:18px;height:18px}
+  .tbody{padding:2px 18px 20px;animation:fade .24s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .opener{display:flex;gap:11px;font-size:15px;line-height:1.5;color:var(--ink);margin:0 0 14px}
+  .opener .bar{flex:0 0 auto;width:4px;border-radius:3px;background:var(--accent,var(--coral))}
+  .opener b{font-weight:700}
+  .mini{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+  .mini li{font-size:13.5px;color:var(--ink-2);line-height:1.45;display:flex;gap:9px;align-items:flex-start}
+  .mini li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:2px;
+    background:var(--accent,var(--coral));margin-top:6px}
+
+  .seeall{width:100%;font-family:var(--disp);font-size:15px;font-weight:700;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:17px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;
+    margin-top:8px;box-shadow:0 2px 4px rgba(40,34,20,.04),0 10px 24px rgba(40,34,20,.07);transition:.18s}
+  .seeall:hover{background:#FFFBEF}
+  .seeall svg{width:18px;height:18px;opacity:.7}
+  .stubnote{text-align:center;font-size:12px;color:var(--on-dark-soft);margin-top:10px;height:15px;opacity:0;transition:opacity .2s}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}
+    .node{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>Loci</h1>
-  <span class="subtitle" id="subtitle">your child's discoveries</span>
-</div>
+<div class="phone">
+  <div class="screen">
+    <div class="statusbar"><span>9:41</span><span class="dots"><span></span><span></span><span></span></span></div>
 
-<div id="captures"><div class="msg">Loading…</div></div>
-
-<script>
-  const deviceId = location.pathname.split('/').filter(Boolean)[1] || 'lens01';
-  document.getElementById('subtitle').textContent = `discoveries — ${deviceId}`;
-
-  // Conversation starters — swap this function for something smarter later
-  const STARTERS = [
-    "Ask them: what made you choose this?",
-    "Ask them: would you want this to change?",
-    "Ask them: what would you have picked instead?",
-    "Ask them: what does this remind you of?",
-    "Ask them: would everyone in the family agree?",
-    "Ask them: who else should see this?",
-    "Ask them: what would you want to know more about?",
-    "Ask them: was this easy or hard to find?",
-    "Ask them: does this make you happy, sad, or something else?",
-    "Ask them: what's the most interesting thing about it?",
-    "Ask them: if this could talk, what would it say?",
-    "Ask them: where does this belong?",
-  ];
-
-  function getConversationStarters(capture, index) {
-    const offset = (index * 3) % STARTERS.length;
-    return [0, 1, 2].map(i => STARTERS[(offset + i) % STARTERS.length]);
-  }
-
-  function relativeTime(createdAt) {
-    const now   = new Date();
-    const then  = new Date(createdAt * 1000);
-    const days  = Math.floor((now - then) / 86400000);
-    const clock = then.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
-    if (days === 0) return `today ${clock}`;
-    if (days === 1) return `yesterday ${clock}`;
-    return then.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ` ${clock}`;
-  }
-
-  function esc(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  function buildCard(capture, index) {
-    const starters = getConversationStarters(capture, index);
-    const photo = capture.photo_url
-      ? `<img src="${esc(capture.photo_url)}" class="card-photo" alt="capture" loading="lazy" />`
-      : '';
-    const prompt = capture.prompt
-      ? `<p class="card-prompt">${esc(capture.prompt).replace(/\n/g, '<br>')}</p>`
-      : '';
-    const audio = capture.audio_url
-      ? `<audio controls class="card-audio" src="${esc(capture.audio_url)}"></audio>`
-      : '';
-    return `
-      <div class="capture-card">
-        ${photo}
-        <div class="card-body">
-          <div class="card-time">${esc(relativeTime(capture.created_at))}</div>
-          ${prompt}
-          ${audio}
-          <div class="starters">
-            <div class="starters-label">talk about it</div>
-            ${starters.map(s => `<div class="starter">${esc(s)}</div>`).join('')}
-          </div>
+    <div class="scroll">
+      <div class="util">
+        <span class="logo">Loci</span>
+        <div class="util-right">
+          <button class="ico" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></button>
+          <button class="ico" aria-label="Profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.2-3.6 4-5 7-5s5.8 1.4 7 5"/></svg></button>
+          <button class="ico ico-reset" id="resetBtn" aria-label="Reset demo" title="Reset demo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
         </div>
       </div>
-    `;
-  }
 
-  async function load() {
-    const el = document.getElementById('captures');
-    try {
-      const res      = await fetch(`/api/captures?device_id=${encodeURIComponent(deviceId)}`);
-      const captures = await res.json();
-      if (!captures.length) {
-        el.innerHTML = '<div class="msg">No captures yet for this device.</div>';
-        return;
+      <header class="header">
+        <div class="sticker-wrap">
+          <span class="sticker" id="topic">…</span>
+          <p class="who"><b id="child">…</b> explored this topic today</p>
+          <p class="reassure">No right answers — just be curious together</p>
+        </div>
+        <button class="ico" aria-label="About this topic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.6" r="1" fill="currentColor" stroke="none"/></svg></button>
+      </header>
+
+      <div class="body">
+        <div id="routes"></div>
+
+        <button class="seeall" id="seeall">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+          See all photos &amp; prompts
+        </button>
+        <p class="stubnote" id="stubnote">Coming soon — a full gallery of every capture.</p>
+      </div>
+    </div>
+
+    <div class="homebar"></div>
+  </div>
+</div>
+
+<script>
+const deviceId = location.pathname.split('/').filter(Boolean)[1] || 'lens01';
+
+const I = {
+  cam:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7H7l1.2-2h7.6L17 7h2.5A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.3"/></svg>',
+  aud:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none"/><path d="M8.5 14.5c1.2 1.3 5.8 1.3 7 0"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.5 5.3 5.8.7-4.3 4 1.1 5.8L12 21l-5.1 1.5 1.1-5.8-4.3-4 5.8-.7z"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>',
+  ply:  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>',
+  paus: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>',
+  leaf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20c0-8 6-14 16-14 0 10-6 14-12 14a8 8 0 0 1-4-1z"/><path d="M9 15c2-2 4-3 7-4"/></svg>',
+};
+const ACCENT = { cam: 'var(--coral)', aud: 'var(--blue)', play: 'var(--coral)' };
+
+function wave() {
+  const h = [9,15,22,12,27,18,10,24,14,28,20,11,23,16,9,26,13,21,10,18,25,12,28,15,9,20];
+  return '<div class="wave">' + h.map(v => `<i style="height:${v}px"></i>`).join('') + '</div>';
+}
+
+function capture(n) {
+  if (n.photo) {
+    return `<div class="photo" style="background-image:url('${n.photo}')"><span class="tag">${n.tag || 'Photo'}</span></div>`;
+  }
+  if (n.audio) {
+    const src = n.audio_url ? ` src="${n.audio_url}"` : '';
+    return `<div class="audio">
+      <button class="aud-btn" aria-label="Play">${I.ply}</button>
+      ${wave()}
+      <span class="dur">${n.audio}</span>
+      <audio preload="none"${src} style="display:none"></audio>
+    </div>`;
+  }
+  if (n.activity) {
+    return `<div class="activity">${I.leaf}<span>${n.activity}</span></div>`;
+  }
+  if (n.pending) {
+    return `<div class="pending">waiting for capture…</div>`;
+  }
+  return '';
+}
+
+function node(n) {
+  const star = n.challenge ? `<span class="star">${I.star}</span>` : '';
+  const pill = n.challenge ? `<span class="chal-pill">${I.star}Challenge</span>` : '';
+  const moves = (n.moves || []).map(m => `<li>${m}</li>`).join('');
+  const acc = n.challenge ? 'var(--coral)' : ACCENT[n.medium];
+  return `<div class="node">
+    <span class="nbadge ${n.medium}">${I[n.medium]}${star}</span>
+    <div class="ncard">
+      <div class="ncard-top">
+        ${pill}
+        <h3 class="ptitle">${n.prompt}</h3>
+        ${capture(n)}
+      </div>
+      <details class="t">
+        <summary><span class="talk">Talk about this</span><span class="chev">${I.chev}</span></summary>
+        <div class="tbody" style="--accent:${acc}">
+          <p class="opener"><span class="bar"></span><span>${n.opener}</span></p>
+          <ul class="mini">${moves}</ul>
+        </div>
+      </details>
+    </div>
+  </div>`;
+}
+
+function route(r, ri) {
+  return `<section class="route">
+    <div class="route-label"><span class="dot" style="background:${r.dot}"></span>
+      <span class="num">Route ${String(ri + 1).padStart(2, '0')}</span>
+      <span class="title">${r.title}</span></div>
+    <div class="rnodes">${r.nodes.map(node).join('')}</div>
+  </section>`;
+}
+
+function wireAudio() {
+  document.querySelectorAll('.audio').forEach(container => {
+    const btn = container.querySelector('.aud-btn');
+    const audioEl = container.querySelector('audio');
+    if (!btn || !audioEl || !audioEl.src) return;
+    btn.onclick = () => {
+      if (audioEl.paused) {
+        document.querySelectorAll('.audio audio').forEach(a => { if (a !== audioEl) { a.pause(); } });
+        document.querySelectorAll('.aud-btn').forEach(b => { b.innerHTML = I.ply; });
+        audioEl.play();
+        btn.innerHTML = I.paus;
+      } else {
+        audioEl.pause();
+        btn.innerHTML = I.ply;
       }
-      el.innerHTML = captures.map(buildCard).join('');
-    } catch (e) {
-      el.innerHTML = '<div class="msg error">Failed to load captures.</div>';
-    }
-  }
+    };
+    audioEl.onended = () => { btn.innerHTML = I.ply; };
+  });
+}
 
-  load();
+let isFirstRender = true;
+let lastKey = '';
+
+async function fetchData() {
+  const res = await fetch('/api/parent/' + deviceId);
+  if (!res.ok) throw new Error('fetch failed');
+  return res.json();
+}
+
+function render(data) {
+  document.getElementById('topic').textContent = data.topic || '';
+  document.getElementById('child').textContent = data.child || '';
+  document.title = 'Loci — ' + (data.topic || 'Parent');
+
+  const routesEl = document.getElementById('routes');
+  routesEl.innerHTML = data.routes.map(route).join('');
+
+  document.querySelectorAll('.node').forEach((el, i) => {
+    if (isFirstRender) {
+      el.style.animationDelay = (i * 70) + 'ms';
+    } else {
+      el.classList.add('no-anim');
+    }
+  });
+  isFirstRender = false;
+
+  wireAudio();
+}
+
+async function poll() {
+  try {
+    const data = await fetchData();
+    const key = JSON.stringify(data);
+    if (key !== lastKey) {
+      lastKey = key;
+      render(data);
+    }
+  } catch (e) {
+    console.warn('poll error', e);
+  }
+}
+
+poll();
+setInterval(poll, 4000);
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if (!confirm('Reset demo? All captures for this device will be deleted and the page will return to its empty state.')) return;
+  try {
+    await fetch('/api/demo/reset/' + deviceId, { method: 'POST' });
+    lastKey = '';
+    isFirstRender = true;
+    await poll();
+  } catch (e) {
+    alert('Reset failed.');
+  }
+});
+
+const note = document.getElementById('stubnote');
+document.getElementById('seeall').addEventListener('click', () => {
+  note.style.opacity = '1';
+  clearTimeout(window._t);
+  window._t = setTimeout(() => { note.style.opacity = '0'; }, 2200);
+});
 </script>
 </body>
 </html>
