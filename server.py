@@ -77,79 +77,52 @@ init_db()
 # Demo script — fixed narrative for parent page
 # ---------------------------------------------------------------------------
 DEMO_SCRIPT = {
-    "demo": {
-        "topic": "Aesthetics",
-        "child": "Ethan",
-        "routes": [
+    'demo': {
+        'topic': 'Beauty',
+        'child': 'Ethan',
+        'routes': [
             {
-                "title": "Is it beautiful to you?",
-                "dot": "var(--yellow)",
-                "nodes": [
+                'title': 'Finding the beautiful',
+                'dot': 'var(--yellow)',
+                'nodes': [
                     {
-                        "medium": "cam",
-                        "challenge": False,
-                        "prompt": "Find the most beautiful thing in this room",
-                        "opener": "He chose this above everything else. Ask: <b>“What made this the most beautiful — out of everything in the room?”</b>",
-                        "moves": [
-                            "Ask: “Would your friend have picked the same thing?”",
-                            "Try: “Is it beautiful, or just your favourite? Are those different?”",
+                        'medium': 'cam',
+                        'challenge': False,
+                        'prompt': "Find something beautiful that you can't carry",
+                        'opener': 'He found something too big, too fixed, too much to take away. Ask: <b>"What made you stop at this — what did you see?"</b>',
+                        'moves': [
+                            'Ask: "Would it still be beautiful if you could take it home?"',
+                            'Ask: "Does something being unmovable make it more or less beautiful?"',
                         ],
                     },
                     {
-                        "medium": "aud",
-                        "challenge": False,
-                        "prompt": "What’s something most people call ugly that you secretly like?",
-                        "opener": "Listen back together first, then ask: <b>“Why do you think other people don’t see it the way you do?”</b>",
-                        "moves": [
-                            "Ask: “Does it being ‘ugly’ to others change how you feel about it?”",
-                            "Turn it round: “Is there something everyone loves that you don’t?”",
+                        'medium': 'aud',
+                        'challenge': False,
+                        'prompt': 'Tell me what you found and what makes it beautiful',
+                        'opener': 'Listen back together first, then ask: <b>"Is it beautiful because of what it looks like, or because of something else?"</b>',
+                        'moves': [
+                            'Ask: "Could you describe it to someone who has never seen it?"',
+                            'Ask: "Would everyone find it beautiful, or just you?"',
                         ],
                     },
                     {
-                        "medium": "play",
-                        "challenge": False,
-                        "prompt": "Look at one thing up close, then far away — does it change?",
-                        "activity": "Ethan studied a leaf with the lens — up close, then from across the room.",
-                        "opener": "<b>“Was it more beautiful close up or far away — and why?”</b>",
-                        "moves": [
-                            "Ask: “Can how you look at something change whether it’s beautiful?”",
-                            "Ask: “Is the beauty in the leaf, or in how you’re seeing it?”",
+                        'medium': 'cam',
+                        'challenge': False,
+                        'prompt': 'Now find beauty in a place nobody ever looks',
+                        'opener': 'He looked where no one bothers to look. Ask: <b>"Why do you think people walk past this without seeing it?"</b>',
+                        'moves': [
+                            'Ask: "Did you have to look differently to find it?"',
+                            'Ask: "Is it still beautiful now that you have noticed it?"',
                         ],
                     },
                     {
-                        "medium": "cam",
-                        "challenge": True,
-                        "prompt": "Photograph something beautiful that isn’t pretty",
-                        "opener": "A tricky one — beauty without prettiness. Ask: <b>“What’s the difference between beautiful and pretty?”</b>",
-                        "moves": [
-                            "Ask: “Can something sad or broken still be beautiful?”",
-                            "Ask: “Is a storm beautiful? A scar?”",
-                        ],
-                    },
-                ],
-            },
-            {
-                "title": "Does everyone agree?",
-                "dot": "var(--blue)",
-                "nodes": [
-                    {
-                        "medium": "cam",
-                        "challenge": False,
-                        "prompt": "Photograph a colour you could look at forever",
-                        "opener": "<b>“Why this colour and not another — can you say what it is about it?”</b>",
-                        "moves": [
-                            "Ask: “Could a colour ever be ugly? Which one, and to who?”",
-                            "Ask: “Do you think I’d choose the same colour?”",
-                        ],
-                    },
-                    {
-                        "medium": "aud",
-                        "challenge": True,
-                        "prompt": "Argue your favourite song is the best ever — then argue it isn’t",
-                        "opener": "He had to take both sides. Ask: <b>“If people disagree, can a song still be ‘the best’?”</b>",
-                        "moves": [
-                            "Ask: “Is there a best song, or just your best song?”",
-                            "Ask: “Did arguing the other side change anything?”",
+                        'medium': 'aud',
+                        'challenge': False,
+                        'prompt': "Tell me where you found it and why it's hidden",
+                        'opener': 'Listen back together, then ask: <b>"Do you think the hiddenness is part of what makes it special?"</b>',
+                        'moves': [
+                            'Ask: "If everyone suddenly noticed it, would it change?"',
+                            'Ask: "Are there beautiful things hidden everywhere, or did you get lucky?"',
                         ],
                     },
                 ],
@@ -385,7 +358,7 @@ def parent_data(device_id):
                 if cam_idx < len(cam_queue):
                     c = cam_queue[cam_idx]
                     n["photo"] = f"/uploads/photos/{Path(c['photo_path']).name}"
-                    n["tag"]   = f"{script['child']}’s photo"
+                    n["tag"]   = f"{script['child']}'s photo"
                     cam_idx += 1
                 else:
                     n["pending"] = True
