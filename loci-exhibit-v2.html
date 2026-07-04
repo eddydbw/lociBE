@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#FFFDF4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex">
+<title>Loci — Exhibit</title>
+<link rel="manifest" href="/exhibit/manifest.webmanifest">
+<link rel="icon" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<!-- fonts are self-hosted: venue Wi-Fi is not trusted -->
+<link rel="preload" as="font" type="font/woff2" href="/static/fonts/mansalva-400.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/static/fonts/comingsoon-400.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/static/fonts/outfit-var.woff2" crossorigin>
+<style>
+  @font-face{font-family:"Mansalva";font-style:normal;font-weight:400;font-display:swap;
+    src:url(/static/fonts/mansalva-400.woff2) format("woff2")}
+  @font-face{font-family:"Coming Soon";font-style:normal;font-weight:400;font-display:swap;
+    src:url(/static/fonts/comingsoon-400.woff2) format("woff2")}
+  @font-face{font-family:"Outfit";font-style:normal;font-weight:400 800;font-display:swap;
+    src:url(/static/fonts/outfit-var.woff2) format("woff2")}
+
+  :root{
+    --bg:#FFFDF4;
+    --card:#FFFEFB;
+    --line:#E9E3D2;
+    --ink:#2A2620;
+    --ink-soft:#8A8172;
+    --blue:#4E90FF;    /* semantic: audio        */
+    --yellow:#FEE751;  /* semantic: capture      */
+    --coral:#FF6C4E;   /* semantic: playback     */
+    --disp:"Outfit",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --hand:"Coming Soon","Comic Sans MS",cursive;
+    --mark:"Mansalva","Comic Sans MS",cursive;
+  }
+
+  *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--disp);
+    height:100vh;height:100dvh;display:flex;flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{pointer-events:none}
+
+  /* soft ambient blooms, matching the parent app */
+  body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(80px);
+    z-index:0;pointer-events:none}
+  body::before{width:420px;height:420px;top:-160px;right:-140px;
+    background:radial-gradient(circle,rgba(254,231,81,.30),transparent 70%)}
+  body::after{width:460px;height:460px;bottom:-180px;left:-160px;
+    background:radial-gradient(circle,rgba(255,108,78,.10),transparent 70%)}
+
+  /* ================= masthead ================= */
+  .mast{flex:0 0 auto;position:relative;z-index:2;display:flex;align-items:center;gap:26px;
+    padding:14px 22px 10px}
+  .brand{flex:0 0 auto}
+  .wordmark{font-family:var(--mark);font-size:42px;line-height:1;color:var(--ink);cursor:default}
+  .tagline{font-family:var(--hand);font-size:13.5px;color:var(--ink-soft);margin-top:2px}
+  .pitch{flex:1 1 auto;min-width:0;font-size:13.5px;line-height:1.45;color:var(--ink);
+    max-width:56ch}
+  .pitch b{font-weight:700}
+  .pitch .compress{color:var(--ink-soft)}
+  .live{flex:0 0 auto;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;
+    color:var(--ink-soft);background:var(--card);border:1px solid var(--line);
+    padding:7px 13px;border-radius:999px}
+  .live .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow);
+    box-shadow:0 0 0 0 rgba(254,231,81,.65);animation:livepulse 2.6s ease-out infinite}
+  @keyframes livepulse{
+    0%{box-shadow:0 0 0 0 rgba(254,231,81,.65)}
+    70%{box-shadow:0 0 0 9px rgba(254,231,81,0)}
+    100%{box-shadow:0 0 0 0 rgba(254,231,81,0)}
+  }
+  .reset-chip{position:absolute;left:24px;top:100%;margin-top:2px;font-family:var(--hand);
+    font-size:13px;color:var(--ink-soft);opacity:0;transition:opacity .3s;pointer-events:none}
+  .reset-chip.show{opacity:1}
+  @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+  .wordmark.wiggle{animation:wiggle .5s ease-in-out 2}
+
+  /* ================= wall ================= */
+  #wall{flex:1 1 auto;min-height:0;position:relative;z-index:1;display:grid;
+    grid-template-columns:repeat(var(--cols,4),1fr);
+    grid-template-rows:repeat(var(--rows,2),1fr);
+    gap:13px;padding:6px 22px 10px}
+  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;
+    overflow:hidden;display:flex;flex-direction:column;min-height:0;
+    box-shadow:0 2px 4px rgba(42,38,32,.04),0 12px 26px rgba(42,38,32,.07);
+    animation:breathe 9s ease-in-out infinite;animation-delay:calc(var(--i,0)*-1.35s)}
+  @keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.006)}}
+
+  .ph{flex:1 1 auto;min-height:0;position:relative;
+    background:linear-gradient(150deg,var(--tcol,#EFEADB),var(--bg))}
+  .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .ph .qm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mark);font-size:64px;color:rgba(42,38,32,.16);transform:rotate(-8deg)}
+  .cbody{flex:0 0 auto;padding:9px 12px 11px;display:flex;flex-direction:column;gap:5px}
+  .chip{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink);background:var(--tcol,#EFEADB);
+    padding:3px 9px 4px;border-radius:999px;white-space:nowrap}
+  .cprompt{margin:0;font-size:12.5px;font-weight:600;line-height:1.3;color:var(--ink);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .cresp{margin:0;font-family:var(--hand);font-size:12.5px;line-height:1.35;color:var(--ink-soft);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .cmeta{display:flex;align-items:center;gap:6px}
+  .atag{display:inline-flex;align-items:center;gap:5px;background:#EAF2FF;color:var(--blue);
+    font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;
+    font-variant-numeric:tabular-nums}
+  .atag .bars{display:inline-flex;align-items:center;gap:2px}
+  .atag .bars i{width:2.5px;border-radius:2px;background:var(--blue);display:block}
+
+  /* land-in + freshness ring (amber = capture) */
+  .card.land{animation:land .85s cubic-bezier(.2,.75,.3,1.12) both}
+  @keyframes land{
+    0%{opacity:0;transform:scale(1.45) translateY(-16px)}
+    55%{opacity:1}
+    100%{opacity:1;transform:scale(1) translateY(0)}
+  }
+  .card.fresh::after{content:"";position:absolute;inset:0;border-radius:inherit;
+    border:3px solid var(--yellow);pointer-events:none;animation:freshfade 9s ease-out forwards}
+  @keyframes freshfade{0%{opacity:1}70%{opacity:.55}100%{opacity:0}}
+
+  /* ================= footer ================= */
+  .foot{flex:0 0 auto;position:relative;z-index:1;padding:4px 24px 10px;display:flex;
+    justify-content:center}
+  .foot p{margin:0;font-family:var(--hand);font-size:12.5px;color:var(--ink-soft);text-align:center}
+
+  /* ================= reveal ================= */
+  #reveal{position:fixed;inset:0;z-index:40;background:var(--bg);display:none;opacity:0;
+    transition:opacity .38s ease}
+  #reveal.show{opacity:1}
+  #reveal .wash{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(90% 120% at 18% 30%,var(--tcol,#EFEADB) 0%,transparent 62%);
+    opacity:.55}
+  .rv-grid{position:relative;height:100%;display:grid;grid-template-columns:54% 1fr;
+    gap:30px;padding:26px 34px 24px;align-items:center}
+  .hero{height:100%;min-height:0;display:flex;align-items:center;justify-content:center}
+  .frame{width:100%;max-width:100%;max-height:100%;aspect-ratio:4/3;border-radius:22px;
+    overflow:hidden;background:var(--tcol,#EFEADB);border:1px solid var(--line);
+    box-shadow:0 22px 48px rgba(42,38,32,.16);transform:rotate(-1.2deg);
+    display:flex;align-items:center;justify-content:center}
+  .frame img{width:100%;height:100%;object-fit:contain;display:block}
+
+  .rv-col{height:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;
+    gap:14px;padding-right:8px}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .eyebrow .dot{width:11px;height:11px;border-radius:50%;background:var(--yellow);
+    animation:livepulse 1.6s ease-out infinite}
+  .rv-chip{align-self:flex-start;font-size:13px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink);background:var(--tcol,#EFEADB);
+    padding:6px 15px 7px;border-radius:999px;transform:rotate(-1deg)}
+  .rv-asked{font-family:var(--hand);font-size:16px;color:var(--ink-soft);margin:2px 0 0}
+  .rv-prompt{margin:0;font-size:clamp(24px,3.4vw,34px);font-weight:800;line-height:1.14;
+    letter-spacing:-.01em;color:var(--ink);max-width:17ch}
+
+  .amod{display:flex;align-items:center;gap:14px;background:var(--card);
+    border:1px solid var(--line);border-radius:18px;padding:13px 16px;max-width:420px;
+    margin-top:6px}
+  .amod[hidden]{display:none}
+  .rv-play{flex:0 0 auto;width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;
+    background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 18px rgba(255,108,78,.35);transition:transform .15s}
+  .rv-play:active{transform:scale(.92)}
+  .rv-play svg{width:24px;height:24px}
+  .rv-play.pulse{animation:invite 1.7s ease-out infinite}
+  @keyframes invite{
+    0%{box-shadow:0 8px 18px rgba(255,108,78,.35),0 0 0 0 rgba(255,108,78,.45)}
+    70%{box-shadow:0 8px 18px rgba(255,108,78,.35),0 0 0 16px rgba(255,108,78,0)}
+    100%{box-shadow:0 8px 18px rgba(255,108,78,.35),0 0 0 0 rgba(255,108,78,0)}
+  }
+  .rv-wavewrap{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .rv-wave{display:flex;align-items:center;gap:3px;height:34px}
+  .rv-wave i{flex:1 1 auto;background:var(--blue);opacity:.28;border-radius:2px;display:block;
+    transition:opacity .12s}
+  .rv-wave i.on{opacity:1}
+  .rv-hint{font-family:var(--hand);font-size:12.5px;color:var(--coral);min-height:16px}
+  .rv-dur{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--blue);
+    font-variant-numeric:tabular-nums}
+  .rv-wait{font-family:var(--hand);font-size:14.5px;color:var(--ink-soft);margin:6px 0 0}
+  .rv-wait[hidden]{display:none}
+  .rv-foot{font-family:var(--hand);font-size:13px;color:var(--ink-soft);margin:14px 0 0}
+
+  /* ================= touch ripple ================= */
+  #fx{position:fixed;inset:0;z-index:90;pointer-events:none;overflow:hidden}
+  .ripple{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+    background:rgba(254,231,81,.55);animation:rip .6s ease-out forwards}
+  @keyframes rip{0%{transform:scale(1);opacity:.9}100%{transform:scale(7);opacity:0}}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="brand">
+    <div class="wordmark" id="wordmark">Loci</div>
+    <div class="tagline" id="tagline"></div>
+  </div>
+  <p class="pitch"><b id="pitchA"></b><br><span class="compress" id="pitchB"></span></p>
+  <div class="live"><span class="dot"></span><span id="liveText"></span></div>
+  <span class="reset-chip" id="resetChip"></span>
+</header>
+
+<main id="wall"></main>
+
+<footer class="foot"><p id="footLine"></p></footer>
+
+<div id="reveal">
+  <div class="wash" id="rvWash"></div>
+  <div class="rv-grid">
+    <div class="hero">
+      <div class="frame" id="rvFrame"><img id="rvImg" alt=""></div>
+    </div>
+    <div class="rv-col">
+      <div class="eyebrow"><span class="dot"></span><span id="rvEyebrow"></span></div>
+      <span class="rv-chip" id="rvChip"></span>
+      <p class="rv-asked" id="rvAsked"></p>
+      <h1 class="rv-prompt" id="rvPrompt"></h1>
+      <div class="amod" id="rvAmod" hidden>
+        <button class="rv-play" id="rvPlay" aria-label="Play">
+          <svg id="rvIconPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>
+          <svg id="rvIconStop" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+        <div class="rv-wavewrap">
+          <div class="rv-wave" id="rvWave"></div>
+          <span class="rv-hint" id="rvHint"></span>
+        </div>
+        <span class="rv-dur" id="rvDur"></span>
+      </div>
+      <p class="rv-wait" id="rvWait" hidden></p>
+      <p class="rv-foot" id="rvFoot"></p>
+    </div>
+  </div>
+</div>
+
+<div id="fx"></div>
+
+<script>
+/* ===========================================================================
+   DATA — the whole CMS. Copy, colours, timings, seed wall. Edit + redeploy.
+   =========================================================================== */
+const DATA = {
+  config: {
+    deviceId: (location.pathname.split('/').filter(Boolean)[1] || 'demo'),
+    pollMs: 4000,             // parent-endpoint poll interval
+    revealHoldMs: 7000,       // minimum time a reveal stays up
+    lockedAudioExtraMs: 6000, // extra invitation time when audio needs a tap
+    settleMs: 950,            // land-in animation time
+    wallCols: 4,
+    wallRows: 2,
+    maxBackoffMs: 30000,      // silent poll retry ceiling
+    watchdogErrLimit: 4,      // page errors before a full reload
+    stallReloadMs: 120000,    // reload if the event loop stalls this long
+    quietReloadHour: 4,       // one maintenance reload per day, 4am, if idle
+  },
+
+  /* ONE place for topic colours. Placeholder pastels — swap for the real
+     zine palette when it lands. Semantic colours (amber capture, blue audio,
+     coral playback) are never used for topics. */
+  topics: {
+    'lying':          { label: 'Lying',              color: '#F4C6D2' },
+    'invisible-ring': { label: 'The Invisible Ring', color: '#D8CDF1' },
+    'art':            { label: 'Is It Art?',         color: '#BFE5D2' },
+    'beauty':         { label: 'Beautiful',          color: '#FADFC7' },
+    'real':           { label: 'What Is Real?',      color: '#C7DEF3' },
+  },
+  topicFallback: { label: 'A Big Question', color: '#EFEADB' },
+
+  copy: {
+    tagline: 'little lenses, big questions',
+    pitchA: 'Somewhere nearby, a child is exploring a big question through a lens.',
+    pitchB: 'What they capture lands here — sped up. It usually reaches a parent hours later.',
+    liveIdle: 'waiting for the next wondering…',
+    eyebrowNew: 'a wondering just arrived',
+    eyebrowAudio: 'listen — they had more to say',
+    lensAsked: 'the lens asked…',
+    audioComing: 'their voice is still on its way…',
+    playHint: 'tap to hear them wonder',
+    footLine: 'sped up for the exhibition — a wondering usually reaches a parent hours later',
+    resetDone: 'a fresh start',
+  },
+
+  /* Scripted past wonderings so the wall is never empty. */
+  seedCaptures: [
+    { topic: 'beauty',         prompt: "Find something beautiful that you can't carry",
+      response: 'the sky was going pink and orange at the same time', dur: '0:14' },
+    { topic: 'lying',          prompt: 'Find something pretending to be something else',
+      response: 'the plastic lemon in the kitchen. it has done nothing but lie', dur: '0:09' },
+    { topic: 'real',           prompt: "Find something real that you can't touch",
+      response: 'my shadow. it follows me everywhere but i can never catch it', dur: '0:11' },
+    { topic: 'art',            prompt: 'Find something that might secretly be art',
+      response: 'the crack in the pavement looks like a drawing of a river', dur: '0:16' },
+    { topic: 'invisible-ring', prompt: "Find a place you'd sneak to if nobody could see you",
+      response: 'behind the big shelf. i would just sit and listen to everyone', dur: '0:12' },
+    { topic: 'real',           prompt: "Find something real that you can't touch",
+      response: 'the wind. you can only see the things it does', dur: '0:08' },
+    { topic: 'art',            prompt: 'Find something that might secretly be art',
+      response: 'a rainbow in a puddle. nobody made it on purpose', dur: '0:13' },
+    { topic: 'lying',          prompt: 'Find something pretending to be something else',
+      response: 'the scarecrow pretends to be a person but the birds all know', dur: '0:10' },
+  ],
+};
+
+/* ===========================================================================
+   boot copy + layout
+   =========================================================================== */
+const cfg = DATA.config;
+const $ = id => document.getElementById(id);
+
+$('tagline').textContent = DATA.copy.tagline;
+$('pitchA').textContent  = DATA.copy.pitchA;
+$('pitchB').textContent  = DATA.copy.pitchB;
+$('liveText').textContent = DATA.copy.liveIdle;
+$('footLine').textContent = DATA.copy.footLine;
+$('rvAsked').textContent  = DATA.copy.lensAsked;
+$('rvFoot').textContent   = DATA.copy.footLine;
+$('resetChip').textContent = DATA.copy.resetDone;
+const wallEl = $('wall');
+wallEl.style.setProperty('--cols', cfg.wallCols);
+wallEl.style.setProperty('--rows', cfg.wallRows);
+const WALL_SLOTS = cfg.wallCols * cfg.wallRows;
+
+function topicInfo(slug){ return DATA.topics[slug] || DATA.topicFallback; }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+function esc(s){ const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+
+/* ===========================================================================
+   wall — keyed cards, re-rendered only when content actually changes
+   =========================================================================== */
+const cardEls = new Map();   // key -> element
+let latestCaps = [];         // last payload captures (oldest first, real device data)
+
+function wallItems(){
+  // captures still waiting for their reveal stay off the wall — the settle
+  // (reveal → lands as freshest card) is the argument of the whole exhibit
+  const held = new Set(queue.filter(q => q.mode === 'new').map(q => q.id));
+  if (currentReveal && currentReveal.mode === 'new') held.add(currentReveal.id);
+  const real = latestCaps.filter(c => c.photoUrl && !held.has(c.capture_id))
+    .slice().reverse()
+    .map(c => ({ key: c.capture_id, cap: c }));
+  const seeds = DATA.seedCaptures.map((s, i) => ({ key: 'seed-' + i, seed: s }));
+  return real.concat(seeds).slice(0, WALL_SLOTS);
+}
+
+function itemSig(it){
+  const c = it.cap || it.seed;
+  return [c.topic, c.prompt, c.photoUrl || '', c.audioUrl || '', c.audioDur || c.dur || '',
+          c.response || ''].join('|');
+}
+
+function buildCard(it){
+  const c = it.cap || it.seed;
+  const t = topicInfo(c.topic);
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.style.setProperty('--tcol', t.color);
+  el.dataset.sig = itemSig(it);
+  const dur = c.audioDur || c.dur;
+  const bars = [10,17,12,20,14,18].map(h => `<i style="height:${h}px"></i>`).join('');
+  el.innerHTML =
+    `<div class="ph">${c.photoUrl
+        ? `<img src="${esc(c.photoUrl)}" alt="">`
+        : `<span class="qm">?</span>`}</div>
+     <div class="cbody">
+       <span class="chip">${esc(t.label)}</span>
+       <p class="cprompt">${esc(c.prompt)}</p>
+       ${c.response ? `<p class="cresp">${esc(c.response)}</p>` : ''}
+       ${dur ? `<span class="cmeta"><span class="atag"><span class="bars">${bars}</span>${esc(dur)}</span></span>` : ''}
+     </div>`;
+  return el;
+}
+
+function renderWall(landKey){
+  const items = wallItems();
+  const keep = new Set();
+  items.forEach((it, idx) => {
+    keep.add(it.key);
+    let el = cardEls.get(it.key);
+    const sig = itemSig(it);
+    if (el && el.dataset.sig !== sig){
+      el.remove(); cardEls.delete(it.key); el = null;
+    }
+    if (!el){
+      el = buildCard(it);
+      cardEls.set(it.key, el);
+      if (it.key === landKey){
+        el.classList.add('land', 'fresh');
+        el.addEventListener('animationend', function h(e){
+          if (e.animationName === 'land'){ el.classList.remove('land'); el.removeEventListener('animationend', h); }
+        });
+        setTimeout(() => el.classList.remove('fresh'), 60000);
+      }
+    }
+    el.style.setProperty('--i', idx);
+    wallEl.appendChild(el);   // appends or moves into order
+  });
+  for (const [k, el] of Array.from(cardEls)){
+    if (!keep.has(k)){ el.remove(); cardEls.delete(k); }
+  }
+}
+
+/* ===========================================================================
+   audio — Web Audio API only (native <audio> fails against this stack)
+   =========================================================================== */
+let actx = null;
+let audioUnlocked = false;
+
+function ensureCtx(){
+  if (!actx){
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      actx.onstatechange = () => { audioUnlocked = actx.state === 'running'; };
+    } catch (e) { /* no audio — reveal still works silently */ }
+  }
+  return actx;
+}
+function tryUnlock(){
+  const c = ensureCtx();
+  if (c && c.state === 'suspended'){
+    c.resume().then(() => { audioUnlocked = c.state === 'running'; }).catch(() => {});
+  } else if (c){
+    audioUnlocked = c.state === 'running';
+  }
+}
+
+const bufferCache = new Map();  // url -> Promise<AudioBuffer>
+function loadBuffer(url){
+  if (!bufferCache.has(url)){
+    const p = (async () => {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error('audio fetch ' + r.status);
+      const ab = await r.arrayBuffer();
+      const c = ensureCtx();
+      if (!c) throw new Error('no AudioContext');
+      return await c.decodeAudioData(ab);
+    })();
+    p.catch(() => bufferCache.delete(url));
+    bufferCache.set(url, p);
+    while (bufferCache.size > 12){
+      bufferCache.delete(bufferCache.keys().next().value);
+    }
+  }
+  return bufferCache.get(url);
+}
+
+function fmtDur(sec){
+  const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+/* ===========================================================================
+   reveal engine
+   =========================================================================== */
+const WAVE_BARS = 26;
+$('rvWave').innerHTML = Array.from({ length: WAVE_BARS },
+  () => `<i style="height:${8 + Math.round(Math.random() * 22)}px"></i>`).join('');
+const waveBars = Array.from($('rvWave').children);
+
+let revealing = false;
+let pendingRender = false;
+let currentReveal = null;   // { id, attachAudio }
+let queue = [];             // [{ id, mode: 'new'|'audio' }]
+let lastRevealEnd = 0;
+
+function setPlayBtn(state){
+  const play = $('rvIconPlay'), stop = $('rvIconStop'), btn = $('rvPlay');
+  play.style.display = state === 'playing' ? 'none' : 'block';
+  stop.style.display = state === 'playing' ? 'block' : 'none';
+  btn.classList.toggle('pulse', state === 'invite');
+  $('rvHint').textContent = state === 'invite' ? DATA.copy.playHint : '';
+}
+
+function stopPlayback(st){
+  if (st.source){ try { st.source.onended = null; st.source.stop(); } catch (e) {} st.source = null; }
+  st.playing = false;
+}
+
+function progressLoop(st){
+  function tick(){
+    if (!st.playing || !st.buf){ return; }
+    const c = ensureCtx();
+    const frac = Math.min(1, (c.currentTime - st.startedAt) / st.buf.duration);
+    const on = Math.round(frac * WAVE_BARS);
+    waveBars.forEach((b, i) => b.classList.toggle('on', i < on));
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function startPlayback(st){
+  const c = ensureCtx();
+  if (!c || c.state !== 'running' || !st.buf) return false;
+  stopPlayback(st);
+  const src = c.createBufferSource();
+  src.buffer = st.buf;
+  src.connect(c.destination);
+  st.source = src;
+  st.playing = true;
+  st.played = true;
+  st.startedAt = c.currentTime;
+  src.onended = () => {
+    if (st.source === src){
+      st.playing = false; st.source = null;
+      setPlayBtn('idle');
+      waveBars.forEach(b => b.classList.remove('on'));
+    }
+  };
+  src.start();
+  setPlayBtn('playing');
+  progressLoop(st);
+  return true;
+}
+
+async function wireAudio(st, url, durLabel){
+  st.url = url;
+  $('rvAmod').hidden = false;
+  $('rvWait').hidden = true;
+  $('rvDur').textContent = durLabel || '';
+  waveBars.forEach(b => b.classList.remove('on'));
+  try {
+    st.buf = await loadBuffer(url);
+    if (st.closed) return;
+    if (!durLabel) $('rvDur').textContent = fmtDur(st.buf.duration);
+    if (audioUnlocked){
+      startPlayback(st);          // unlocked by a prior touch → auto-play
+    } else {
+      setPlayBtn('invite');       // autoplay policy as design: pulsing invitation
+    }
+  } catch (e) {
+    if (!st.closed){ $('rvAmod').hidden = true; $('rvWait').hidden = true; }  // silent
+  }
+}
+
+$('rvPlay').addEventListener('click', async () => {
+  const st = currentReveal && currentReveal.st;
+  if (!st) return;
+  if (st.playing){ stopPlayback(st); setPlayBtn('idle'); waveBars.forEach(b => b.classList.remove('on')); return; }
+  try {
+    const c = ensureCtx();
+    if (c) await c.resume().catch(() => {});
+    audioUnlocked = !!c && c.state === 'running';
+    st.buf = st.buf || await loadBuffer(st.url);
+    startPlayback(st);
+  } catch (e) { /* stay silent */ }
+});
+
+function capById(id){ return latestCaps.find(c => c.capture_id === id); }
+
+async function doReveal(cap, mode){
+  const t = topicInfo(cap.topic);
+  const rv = $('reveal');
+  const st = { playing: false, played: false, source: null, buf: null, url: null, closed: false };
+  currentReveal = {
+    id: cap.capture_id,
+    mode,
+    st,
+    attachAudio(c2){
+      if (st.closed || st.url) return;
+      st.hasAudio = true;
+      wireAudio(st, c2.audioUrl, c2.audioDur);
+    },
+  };
+  st.hasAudio = !!cap.audioUrl;
+
+  rv.style.setProperty('--tcol', t.color);
+  $('rvEyebrow').textContent = mode === 'audio' ? DATA.copy.eyebrowAudio : DATA.copy.eyebrowNew;
+  $('rvChip').textContent = t.label;
+  $('rvPrompt').textContent = cap.prompt || '';
+  $('rvAmod').hidden = true;
+  $('rvWait').hidden = true;
+  setPlayBtn('idle');
+  waveBars.forEach(b => b.classList.remove('on'));
+
+  // photo first — wait for it (bounded) so the reveal never shows a blank frame
+  const img = $('rvImg');
+  img.removeAttribute('src');
+  let imgOk = true;
+  await Promise.race([
+    new Promise(res => {
+      img.onload = () => res();
+      img.onerror = () => { imgOk = false; res(); };
+      img.src = cap.photoUrl;
+    }),
+    sleep(4500),
+  ]);
+  if (!imgOk) return;   // broken photo: skip silently, card still reaches the wall
+
+  if (cap.audioUrl){
+    wireAudio(st, cap.audioUrl, cap.audioDur);   // async; may auto-play
+  } else {
+    $('rvWait').hidden = false;
+    $('rvWait').textContent = DATA.copy.audioComing;
+  }
+
+  rv.style.display = 'block';
+  void rv.offsetWidth;                     // commit display before transitioning
+  await sleep(30);
+  rv.classList.add('show');
+
+  // hold: minimum dwell, then stretch for audio (playing, or awaiting a tap)
+  await sleep(cfg.revealHoldMs);
+  if (st.hasAudio){
+    const inviteUntil = Date.now() + (st.played ? 0 : cfg.lockedAudioExtraMs);
+    while (!st.closed && (st.playing || (!st.played && Date.now() < inviteUntil))){
+      await sleep(200);
+    }
+    if (st.played && !st.playing) await sleep(1200);   // let the last word settle
+  }
+
+  st.closed = true;
+  stopPlayback(st);
+  currentReveal = null;
+
+  rv.classList.remove('show');
+  await sleep(420);
+  rv.style.display = 'none';
+
+  // settle: the argument of the whole exhibit — land into the wall
+  renderWall(cap.capture_id);
+  await sleep(cfg.settleMs);
+  lastRevealEnd = Date.now();
+}
+
+async function pump(){
+  if (revealing || queue.length === 0) return;
+  revealing = true;
+  try {
+    while (queue.length){
+      const item = queue.shift();
+      const cap = capById(item.id);
+      if (!cap || !cap.photoUrl) continue;
+      try { await doReveal(cap, item.mode); } catch (e) { console.warn('reveal', e); }
+    }
+  } finally {
+    revealing = false;
+    currentReveal = null;
+    if (pendingRender){ pendingRender = false; renderWall(); }
+  }
+}
+
+/* ===========================================================================
+   polling — 4s cadence, silent backoff, never an error on screen
+   =========================================================================== */
+const known = new Map();    // capture_id -> { hasAudio }
+let firstLoad = true;
+let backoff = cfg.pollMs;
+let lastPollOk = 0;
+let heartbeat = Date.now();
+
+function requestWallRender(){
+  if (revealing){ pendingRender = true; } else { renderWall(); }
+}
+
+function onData(caps){
+  const byId = new Map(caps.map(c => [c.capture_id, c]));
+  let changed = false;
+
+  // captures vanished (demo reset from anywhere) → prune
+  for (const id of Array.from(known.keys())){
+    if (!byId.has(id)){ known.delete(id); changed = true; }
+  }
+  queue = queue.filter(it => byId.has(it.id));
+
+  for (const c of caps){
+    const k = known.get(c.capture_id);
+    if (!k){
+      known.set(c.capture_id, { hasAudio: !!c.audioUrl });
+      changed = true;
+      if (!firstLoad && c.photoUrl) queue.push({ id: c.capture_id, mode: 'new' });
+    } else if (!k.hasAudio && c.audioUrl){
+      k.hasAudio = true;
+      changed = true;
+      if (!firstLoad){
+        if (currentReveal && currentReveal.id === c.capture_id){
+          currentReveal.attachAudio(c);           // arrived mid-reveal: wire it live
+        } else if (!queue.some(it => it.id === c.capture_id)){
+          queue.push({ id: c.capture_id, mode: 'audio' });   // re-reveal to be heard
+        }
+      }
+    }
+  }
+
+  latestCaps = caps;
+  firstLoad = false;
+  if (changed) requestWallRender();
+  pump();
+}
+
+async function poll(){
+  try {
+    const r = await fetch('/api/parent/' + cfg.deviceId, { cache: 'no-store' });
+    if (!r.ok) throw new Error('poll ' + r.status);
+    const data = await r.json();
+    onData(Array.isArray(data.captures) ? data.captures : []);
+    backoff = cfg.pollMs;
+    lastPollOk = Date.now();
+  } catch (e) {
+    backoff = Math.min(Math.round(backoff * 1.6), cfg.maxBackoffMs);  // attract persists, silently
+  } finally {
+    heartbeat = Date.now();
+    setTimeout(poll, backoff);
+  }
+}
+
+/* ===========================================================================
+   exhibition hardening
+   =========================================================================== */
+// screen wake lock, re-acquired forever
+let wakeLock = null;
+async function acquireWakeLock(){
+  try {
+    if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+  } catch (e) { /* retried below */ }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) acquireWakeLock(); });
+setInterval(() => { if (!wakeLock || wakeLock.released) acquireWakeLock(); }, 60000);
+acquireWakeLock();
+
+// watchdog: thrown errors or a stalled loop → full reload
+let errCount = 0;
+function bumpErr(){ if (++errCount >= cfg.watchdogErrLimit) location.reload(); }
+window.addEventListener('error', bumpErr);
+window.addEventListener('unhandledrejection', bumpErr);
+setInterval(() => {
+  if (Date.now() - heartbeat > cfg.stallReloadMs) location.reload();
+}, 15000);
+
+// one quiet maintenance reload per day, only while healthy and idle
+setInterval(() => {
+  const now = new Date();
+  const today = now.toDateString();
+  if (now.getHours() === cfg.quietReloadHour &&
+      localStorage.getItem('lociDailyReload') !== today &&
+      !revealing && queue.length === 0 &&
+      Date.now() - lastPollOk < 30000){
+    localStorage.setItem('lociDailyReload', today);
+    location.reload();
+  }
+}, 60000);
+
+// hidden gesture: 5 taps on the wordmark → clean demo reset
+const tapTimes = [];
+$('wordmark').addEventListener('pointerdown', async () => {
+  const now = Date.now();
+  tapTimes.push(now);
+  while (tapTimes.length && now - tapTimes[0] > 2500) tapTimes.shift();
+  if (tapTimes.length < 5) return;
+  tapTimes.length = 0;
+  try {
+    await fetch('/api/demo/reset/' + cfg.deviceId, { method: 'POST' });
+    known.clear();
+    queue = [];
+    latestCaps = [];
+    firstLoad = true;
+    renderWall();
+    const wm = $('wordmark'), chip = $('resetChip');
+    wm.classList.add('wiggle');
+    chip.classList.add('show');
+    setTimeout(() => { wm.classList.remove('wiggle'); chip.classList.remove('show'); }, 1800);
+  } catch (e) { /* silent */ }
+});
+
+// every touch responds: a small bloom, which also unlocks the AudioContext
+document.addEventListener('pointerdown', e => {
+  tryUnlock();
+  const fx = $('fx');
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  r.style.left = e.clientX + 'px';
+  r.style.top = e.clientY + 'px';
+  fx.appendChild(r);
+  setTimeout(() => r.remove(), 700);
+}, { passive: true });
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+/* boot */
+renderWall();
+poll();
+</script>
+</body>
+</html>
