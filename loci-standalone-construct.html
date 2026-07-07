@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Loci - connect &amp; discuss (construct)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mansalva&family=Coming+Soon&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   LOCI - STANDALONE TABLET  ·  V2 "CONSTRUCT"
+   --------------------------------------------------------------------------
+   HYPOTHESIS (upgraded): a parent who CONSTRUCTS a question - helped only
+   when they struggle, by an escalating ladder of nudges - internalises the
+   facilitation moves more deeply than one who picks from multiple choice.
+   No child is simulated. Feedback is about the QUESTION'S FORM only
+   (classifier from the project's own finding: tell/what/where/walk demands
+   construction; is/can/do/would allows a one-word exit).
+   Keep V1 (multiple choice) alive - run both at the test run and compare.
+   ========================================================================== */
+:root{
+  --cream:#FFFDF4;--card:#FFFEFB;--ink:#2A2620;--soft:#7A7466;--line:#E9E3D2;
+  --blue:#4A7FB5;--blue-soft:#DCE8F3;--coral:#E8806B;--amber:#F3B13C;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Outfit',sans-serif;background:var(--cream);color:var(--ink);
+  overflow:hidden;overscroll-behavior:none;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased;
+}
+input{user-select:text;-webkit-user-select:text}
+#stage{position:relative;width:100vw;height:100vh;overflow:hidden}
+button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
+
+/* ================= ATTRACT ================= */
+.attract{position:absolute;inset:0;display:grid;grid-template-rows:auto auto 1fr;
+  padding:3.4vmin 4.6vmin 2.4vmin;transition:opacity .8s ease,filter .8s ease}
+.masthead{display:flex;align-items:baseline;gap:2vmin;flex-wrap:wrap}
+.wordmark{font-family:'Mansalva',cursive;font-size:clamp(32px,5.6vmin,66px);line-height:1}
+.tagline{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(14px,1.9vmin,23px)}
+.pitch{margin-top:1vmin;max-width:64ch;font-size:clamp(13.5px,1.8vmin,20px);line-height:1.45;color:var(--soft)}
+.pitch b{color:var(--ink);font-weight:500}
+.legendrow{display:flex;flex-wrap:wrap;gap:1vmin 2.4vmin;align-items:center;
+  margin-top:1.6vmin;padding-top:1.4vmin;border-top:1px solid var(--line)}
+.legendrow .lead{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.5vmin,16px)}
+.key-dot{display:inline-flex;align-items:center;gap:7px;font-size:clamp(11px,1.4vmin,15px)}
+.key-dot i{width:10px;height:10px;border-radius:50%;flex:none}
+.arrive-cta{
+  margin-left:auto;background:var(--amber);color:var(--ink);font-weight:600;
+  font-size:clamp(13px,1.7vmin,17px);padding:10px 20px;border-radius:999px;
+  animation:beckon 2.6s ease-in-out infinite;box-shadow:0 8px 22px -10px var(--amber);
+}
+@keyframes beckon{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.wall-label{display:flex;align-items:center;gap:14px;margin:2vmin 0 1.3vmin}
+.wall-label span{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.5vmin,17px);white-space:nowrap}
+.wall-label::after{content:"";flex:1;height:1px;background:var(--line)}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1.9vmin;align-content:start;overflow:hidden}
+.cardw{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--tc,#bbb);
+  border-radius:18px;overflow:hidden;display:flex;flex-direction:column;animation:breathe 7s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.cardw .photo{aspect-ratio:4/3;display:flex;align-items:flex-end;padding:10px;
+  background:var(--pbg);background-size:cover;background-position:center}
+.chip{font-family:'Coming Soon',cursive;font-size:12px;color:var(--ink);background:var(--tc,#999);
+  padding:4px 11px;border-radius:999px;box-shadow:0 2px 8px -2px rgba(0,0,0,.25)}
+.cardw .body{padding:10px 13px 12px}
+.cardw .prompt{font-size:12.5px;color:var(--soft);line-height:1.35;margin-bottom:6px}
+.cardw .resp{font-family:'Coming Soon',cursive;font-size:14px;line-height:1.4}
+.cardw.fresh{animation:landin .7s cubic-bezier(.2,.8,.2,1) both,glowring 2.4s ease-out .5s both,breathe 7s ease-in-out 3s infinite}
+@keyframes landin{from{opacity:0;transform:scale(.88) translateY(22px)}to{opacity:1;transform:none}}
+@keyframes glowring{0%{box-shadow:0 0 0 0 var(--tcglow)}100%{box-shadow:0 0 0 22px rgba(0,0,0,0)}}
+.cardw.homeglow{animation:glowring 2.2s ease-out both,breathe 7s ease-in-out infinite}
+/* the open sixth slot (sixthSlot:"yours") */
+.cardw.open-slot{border:1.5px dashed #D8D2C0;background:none;box-shadow:none;
+  align-items:center;justify-content:center;gap:10px;padding:18px;text-align:center}
+.open-slot .dots{display:flex;gap:6px}
+.open-slot .dots i{width:9px;height:9px;border-radius:50%}
+.open-slot .t1{font-family:'Mansalva',cursive;font-size:clamp(16px,2.4vmin,24px);line-height:1.2}
+.open-slot .t2{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.6vmin,15px)}
+/* the no-slot alternative (sixthSlot:"centered"): five cards, self-balancing rows */
+.wall.centered{display:flex;flex-wrap:wrap;justify-content:center}
+.wall.centered .cardw{flex:0 1 230px}
+
+/* ================= ARRIVAL ================= */
+.reveal{position:absolute;inset:0;background:var(--rvbg,var(--cream));
+  display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:5vmin;padding:6vmin;
+  opacity:0;pointer-events:none;transition:opacity .55s ease,background .55s ease}
+.reveal.on{opacity:1;pointer-events:auto}
+.reveal-eyebrow{position:absolute;top:4.4vmin;left:6vmin;font-family:'Coming Soon',cursive;
+  color:var(--tcdeep,#a76b1c);font-size:clamp(13px,1.7vmin,19px);display:flex;align-items:center;gap:10px}
+.reveal-eyebrow .pulse{width:11px;height:11px;border-radius:50%;background:var(--tc,#f3b13c);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--tcglow,rgba(243,177,60,.55))}70%{box-shadow:0 0 0 16px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
+.reveal-photo{border-radius:24px;overflow:hidden;aspect-ratio:4/3;
+  box-shadow:0 24px 60px -18px var(--tcshadow,rgba(90,70,30,.35));
+  display:flex;align-items:flex-end;padding:16px;background:var(--pbg);
+  background-size:cover;background-position:center;transform:scale(.96);opacity:0}
+.reveal.on .reveal-photo{animation:photoIn .8s .15s cubic-bezier(.2,.8,.2,1) both}
+@keyframes photoIn{to{transform:scale(1);opacity:1}}
+.reveal-side{transform:translateY(14px);opacity:0}
+.reveal.on .reveal-side{animation:sideIn .7s .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sideIn{to{transform:none;opacity:1}}
+.reveal-plabel{font-family:'Coming Soon',cursive;color:var(--tcdeep,var(--soft));font-size:clamp(12px,1.5vmin,16px);margin-bottom:8px}
+.reveal-prompt{font-size:clamp(19px,2.9vmin,35px);line-height:1.25;font-weight:500;margin-bottom:2.6vmin}
+.saidbox{font-family:'Coming Soon',cursive;font-size:clamp(14px,1.9vmin,22px);line-height:1.45;
+  border-left:3px solid var(--tc,var(--blue));padding-left:15px}
+.reveal-foot{position:absolute;bottom:3.8vmin;left:6vmin;right:6vmin;text-align:center;
+  font-size:clamp(11.5px,1.5vmin,16px);color:var(--soft)}
+.invite{margin-top:3.2vmin;background:var(--card);border:1.5px dashed var(--tc,#999);
+  border-radius:16px;padding:14px 16px;opacity:0}
+.reveal.on .invite{animation:sideIn .6s 1.6s ease forwards}
+.invite p{font-size:clamp(13px,1.8vmin,18px);color:var(--soft);margin-bottom:10px}
+.invite p b{color:var(--ink);font-weight:500}
+.invite .row{display:flex;gap:10px;flex-wrap:wrap}
+.btn-go{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:11px 20px;border-radius:999px;font-size:clamp(13px,1.8vmin,17px)}
+.btn-pass{background:none;border:1.5px solid var(--line);color:var(--soft);padding:11px 18px;border-radius:999px;font-size:clamp(13px,1.8vmin,17px)}
+
+/* ================= DISCUSS (construct) ================= */
+.discuss{position:absolute;inset:0;background:var(--rvbg,var(--cream));
+  display:flex;flex-direction:column;max-width:900px;margin:0 auto;padding:4vmin 5.4vmin 2.6vmin;
+  opacity:0;pointer-events:none;transition:opacity .5s ease}
+.discuss.on{opacity:1;pointer-events:auto}
+.d-head{display:flex;gap:2vmin;align-items:center;margin-bottom:1.8vmin;
+  background:var(--card);border:1px solid var(--line);border-left:5px solid var(--tc,#999);
+  border-radius:16px;padding:1.4vmin 1.8vmin}
+.d-head .ph{width:clamp(56px,9.5vmin,96px);aspect-ratio:1;border-radius:12px;flex:none;
+  background:var(--pbg);background-size:cover;background-position:center}
+.d-head .said{font-family:'Coming Soon',cursive;font-size:clamp(13px,1.9vmin,19px);line-height:1.4}
+/* your questions for this wondering */
+.qlist-label{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.6vmin,16px);margin-bottom:.7vmin}
+.qlist{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:1.1vmin;
+  padding:.3vmin .3vmin 1.4vmin;-webkit-overflow-scrolling:touch}
+@keyframes pop{to{opacity:1;transform:none}}
+.qcard{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--tc,#999);
+  border-radius:14px;padding:12px 15px;opacity:0;transform:translateY(10px);animation:pop .4s ease forwards}
+.qcard .qtext{font-family:'Coming Soon',cursive;font-size:clamp(14px,2vmin,19px);line-height:1.45}
+.qcard.dim{border-left-color:var(--line)}
+.qcard.dim .qtext{opacity:.6;font-family:'Outfit',sans-serif}
+.qcard .qnote{margin-top:6px;color:var(--soft);font-size:clamp(11.5px,1.6vmin,15px);font-style:italic}
+
+/* the composer - the generation moment */
+.composer{padding-top:1.2vmin;border-top:1px solid var(--line)}
+.composer .ask{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12.5px,1.7vmin,16px)}
+.c-row{display:flex;gap:10px;margin-top:.9vmin}
+#qInput{
+  flex:1;font-family:'Outfit',sans-serif;font-size:clamp(14px,2vmin,19px);color:var(--ink);
+  background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 15px;outline:none;
+}
+#qInput:focus{border-color:var(--tc,#999)}
+.send{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:0 22px;border-radius:14px;
+  font-size:clamp(13.5px,1.9vmin,18px)}
+.stuck{
+  margin-top:.9vmin;background:none;border:none;color:var(--tcdeep,#888);
+  font-family:'Coming Soon',cursive;font-size:clamp(12.5px,1.7vmin,16px);
+  text-decoration:underline dotted;padding:4px 2px;
+}
+.coach{margin-top:.9vmin;display:none}
+.coach.on{display:block;animation:pop .4s ease both}
+.coach .tactic{
+  background:var(--card);border:1.5px dashed var(--tc,#999);border-radius:14px;
+  padding:12px 15px;font-size:clamp(12.5px,1.7vmin,16px);color:var(--soft);line-height:1.5;
+}
+.coach .tactic b{color:var(--ink);font-weight:500}
+.coach .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:.8vmin}
+.coach .chipbtn{
+  background:var(--card);border:1.5px solid var(--tc,#999);color:var(--ink);
+  border-radius:999px;padding:9px 15px;font-size:clamp(12.5px,1.7vmin,16px);
+  transition:transform .12s ease;
+}
+.coach .chipbtn:active{transform:scale(.96)}
+.landing{margin-top:.4vmin;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.landing .ask{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12.5px,1.7vmin,16px)}
+.btn-sum{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:11px 20px;border-radius:999px;
+  font-size:clamp(13px,1.8vmin,17px);animation:beckon 2.4s ease-in-out infinite}
+.sumkey{font-family:'Coming Soon',cursive;font-size:clamp(14px,2vmin,19px);background:var(--card);
+  border:1.5px dashed var(--tc,#999);border-radius:14px;padding:11px 16px}
+.keycard.yours{background:var(--tctint,var(--card))}
+
+
+/* ================= KEYS ================= */
+.keysScreen{position:absolute;inset:0;background:var(--cream);display:flex;flex-direction:column;
+  justify-content:center;max-width:980px;margin:0 auto;padding:5vmin 6vmin;
+  opacity:0;pointer-events:none;transition:opacity .5s ease}
+.keysScreen.on{opacity:1;pointer-events:auto}
+.eyebrow{font-family:'Coming Soon',cursive;color:var(--tcdeep,#a76b1c);font-size:clamp(13px,1.8vmin,18px);margin-bottom:1vmin}
+.big{font-family:'Mansalva',cursive;font-size:clamp(26px,5vmin,50px);line-height:1.1}
+.sub{color:var(--soft);font-size:clamp(13.5px,1.9vmin,19px);line-height:1.5;margin-top:1.2vmin;max-width:56ch}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.6vmin;margin-top:2.6vmin}
+.keycard{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--tc,#999);
+  border-radius:16px;padding:14px 16px;opacity:0;animation:pop .5s ease forwards}
+.keycard:nth-child(2){animation-delay:.1s}.keycard:nth-child(3){animation-delay:.2s}
+.keycard:nth-child(4){animation-delay:.3s}.keycard:nth-child(5){animation-delay:.4s}
+.keycard .q{font-family:'Coming Soon',cursive;font-size:clamp(14px,1.9vmin,18px);margin-bottom:5px}
+.keycard .why{color:var(--soft);font-size:clamp(11.5px,1.5vmin,14px);line-height:1.4}
+.tactline{margin-top:2vmin;font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12.5px,1.7vmin,16px)}
+.btn-done{margin-top:2.4vmin;align-self:flex-start;background:var(--tc,#999);color:var(--ink);font-weight:600;
+  padding:12px 24px;border-radius:999px;font-size:clamp(13.5px,1.9vmin,18px)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="attract" id="attract"></div>
+  <div class="reveal" id="reveal"></div>
+  <div class="discuss" id="discuss"></div>
+  <div class="keysScreen" id="keysScreen"></div>
+</div>
+
+<script>
+/* ==========================================================================
+   DATA - all copy, colours, scripts. V2 exchange = response POOLS, not
+   branches: the child answers by the FORM of whatever the parent types.
+   ========================================================================== */
+const DATA = {
+  copy:{
+    wordmark:"Loci", tagline:"a lens for wondering",
+    pitch:"A child explores a big question alone with a small camera. It catches their thinking as pictures and voice notes. <b>Each wondering then travels to a parent, who picks the conversation up at home.</b> Here you can watch one arrive.",
+    legendLead:"five big questions:",
+    wallLabel:"recent wonderings",
+    arriveCta:"✳ watch one arrive",
+    yoursTitle:"the sixth question is yours",
+    yoursSub:"what would you ask?",
+    revealEyebrow:"a wondering arriving…",
+    revealPlabel:"the lens asked",
+    revealFoot:"In real life a wondering reaches the parent's phone hours after the child captures it. Here, things are sped up.",
+    inviteText:"It's just landed with the parent. <b>What happens next is their part: finding the questions.</b> Want to try?",
+    inviteGo:"find the questions →", invitePass:"just watching",
+    composerAsk:"What would you ask them? (in your own words)",
+    composerAskNext:"And if that opened something up… what might you ask next?",
+    qlistLabel:"your questions for this wondering",
+    keysGo:"see the pocket keys →",
+    inputPlaceholder:"type what you'd say…",
+    send:"say it",
+    stuck:["stuck? a little nudge","a bit more help?","or just borrow one…"],
+    landingAsk:"Two keys made. And when the talk finally lands somewhere, there’s one more:",
+    sumBtn:"“Can we sum this one up together?”",
+  },
+
+  /* the nudge ladder - level 1 tactics, level 2 starters, level 3 borrow */
+  coach:{
+    tactic:"Questions that hand the thinking back tend to <b>ask for a walk, not a verdict</b>. They start with <b>tell me… / what… / where… / walk me through…</b><br>Questions starting <b>is / can / do / would</b> can be answered in one word (and often are).",
+    starters:["Tell me more about…","What would be the opposite of…","Does this remind you of…","Where else have you seen…","Walk me through…"],
+  },
+
+  config:{ holdBeforeInvite:4.5, autoArriveEvery:50, idleResetSeconds:120,
+           maxWallCards:9, sixthSlot:"yours" /* "yours" | "centered" */, nudgeAfterSeconds:14, questionsBeforeLanding:2 },
+
+  topics:{ /* real zine palette - single source of truth */
+    "Lying":{color:"#B7F193"},
+    "The Invisible Ring":{color:"#F1DD93"},
+    "Beautiful":{color:"#78ABFE"},
+    "Is It Art?":{color:"#F19394"},
+    "Reality":{color:"#DE93F1"},
+  },
+
+  captures:[
+    {topic:"Is It Art?", prompt:"Walk me through why you think it counts.", response:"It’s art because someone wanted me to look at it differently."},
+    {topic:"Reality", prompt:"Tell me about something real that you can’t touch.", response:"A song is real but it only exists while it’s happening."},
+    {topic:"The Invisible Ring", prompt:"Walk me through what you’d do if no one could see you.", response:"I’d be good anyway, but it would be harder to choose."},
+    {topic:"Lying", prompt:"Tell me about a time a small lie felt kind.", response:"Saying you like the present even if you don’t."},
+    {topic:"Beautiful", prompt:"Tell me what made you stop and look.", response:"It was beautiful because it was a little bit broken."},
+  ],
+
+  session:[
+    {topic:"Beautiful", prompt:"Tell me what made you stop and look.", said:"“I took this because it’s a bit broken… but I still really like looking at it.”", photoLabel:"a mug with a golden crack"},
+    {topic:"Reality", prompt:"Show me something that’s only real sometimes.", said:"“A puddle! It’s completely real today and tomorrow it’s just… gone?”", photoLabel:"a puddle with sky in it"},
+    {topic:"Lying", prompt:"Walk me through a lie that would be impossible to tell.", said:"“You can’t lie to a mirror. It already saw you.”", photoLabel:"their own reflection"},
+    {topic:"Is It Art?", prompt:"Walk me through the moment something becomes art.", said:"“When you put it somewhere on purpose and then step back.”", photoLabel:"leaves arranged on a wall"},
+    {topic:"The Invisible Ring", prompt:"Tell me who you’d visit if nobody could see you.", said:"“My gran, so I could hear what she says when I’m not there.”", photoLabel:"a front door"},
+  ],
+
+  /* V2 construct: no simulated child. borrow[] feeds nudge level 3. */
+  exchanges:{
+    "Beautiful":{borrow:["Tell me more about the crack…","What would be the opposite of this mug?"]},
+    "Reality":{borrow:["Tell me where the puddle goes…","What else is only real sometimes?"]},
+    "Lying":{borrow:["Tell me more about the mirror…","Who else would be impossible to lie to?"]},
+    "Is It Art?":{borrow:["Tell me about the stepping back…","Does this remind you of anything at home?"]},
+    "The Invisible Ring":{borrow:["Tell me more about gran’s secret voice…","What would the opposite of invisible be?"]},
+  },
+
+  /* notes when a question's FORM closes the door (no child speaks) */
+  closedNote:"that one could be answered in one word",
+  statementNote:"whose idea is it now?",
+  retryHint:"the wondering’s still there. Try asking for a walk, not a verdict",
+
+  keysEnd:{
+    eyebrow:"that’s the whole job",
+    title:"You didn’t need the answer.",
+    sub:"The first ones are yours, made a moment ago. Every wondering the lens sends home is waiting for questions like them. The rest, if you ever want one in your pocket:",
+    yoursWhy:"yours, made just now.",
+    keys:[
+      {q:"“Tell me more…”", why:"the smallest key: it opens almost anything."},
+      {q:"“Does this remind you of something else?”", why:"lets one wondering borrow from the rest of their world."},
+      {q:"“Are there things that are different to this?”", why:"an edge helps a shape appear."},
+      {q:"“What would be the opposite?”", why:"flipping a thought shows what it’s made of."},
+      {q:"“Can we sum it up together?”", why:"summarise, don’t translate. The words should stay theirs."},
+    ],
+    tact:"None of these need a right answer. That’s rather the point.",
+    done:"back to the wall →",
+  },
+};
+
+/* ========================= colour derivation (pastel-tuned) ========================= */
+const CREAM='#FFFDF4', BLACK='#2A2620';
+function hexRGB(h){const n=parseInt(h.slice(1),16);return[n>>16,(n>>8)&255,n&255];}
+function mix(a,b,t){const A=hexRGB(a),B=hexRGB(b);
+  return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');}
+function palette(topic){
+  const base=(DATA.topics[topic]||{color:'#999999'}).color;
+  return{base,deep:mix(base,BLACK,.55),tint:mix(base,CREAM,.55),tint2:mix(base,CREAM,.18),
+    bubtint:mix(base,CREAM,.62),photoA:mix(base,CREAM,.1),photoB:mix(base,BLACK,.32),
+    glow:base+'B3',shadow:base+'73'};
+}
+function photoBG(c,p){return c.photoUrl?`url(${c.photoUrl})`:`linear-gradient(135deg,${p.photoA} 0%,${p.photoB} 100%)`;}
+const $=id=>document.getElementById(id);
+function wc(s){return s.split(/\s+/).filter(Boolean).length;}
+
+/* ========================= THE CLASSIFIER =========================
+   The project's own finding, mechanised:
+   tell/what/where/how/why/walk/show/describe → structurally demands
+   construction → 'open'. is/are/do/does/did/can/could/will/would →
+   allows a one-word exit → 'closed'. No question at all → 'statement'.
+   Judges FORM only - a known, honest limit of this prototype.        */
+function classify(q){
+  const t=q.trim().toLowerCase().replace(/^["'“”]+/,'');
+  if(!t)return null;
+  const hasQ=/\?/.test(t);
+  const open=/^(tell|what|how|where|why|when|which|who|walk|show|describe|imagine|say|talk|help me)/;
+  const closed=/^(is|are|am|do|does|did|can|can't|could|couldn't|will|won't|would|wouldn't|have|has|had|was|were|isn't|don't|doesn't|aren't|shall|should)/;
+  if(open.test(t))return 'open';
+  if(closed.test(t))return 'closed';
+  if(!hasQ)return 'statement';
+  return 'open';  // unrecognised but question-shaped: benefit of the doubt
+}
+
+/* ========================= attract ========================= */
+const C=DATA.copy;
+function cardHTML(c,fresh){
+  const p=palette(c.topic);
+  return `<div class="cardw" data-topic="${c.topic}" style="--tc:${p.base};--tcglow:${p.glow};--pbg:${photoBG(c,p)}">
+    <div class="photo"><span class="chip" style="background:${p.base}">${c.topic}</span></div>
+    <div class="body"><div class="prompt">“${c.prompt}”</div><div class="resp">${c.response}</div></div></div>`;
+}
+function openSlotHTML(){
+  return `<div class="cardw open-slot">
+    <div class="dots">${Object.values(DATA.topics).map(t=>`<i style="background:${t.color}"></i>`).join('')}</div>
+    <div class="t1">${C.yoursTitle}</div>
+    <div class="t2">${C.yoursSub}</div></div>`;
+}
+function renderAttract(){
+  $('attract').innerHTML=`
+    <div><div class="masthead"><div class="wordmark">${C.wordmark}</div><div class="tagline">${C.tagline}</div></div>
+    <div class="pitch">${C.pitch}</div></div>
+    <div class="legendrow"><span class="lead">${C.legendLead}</span>
+      ${Object.entries(DATA.topics).map(([n,t])=>`<span class="key-dot"><i style="background:${t.color}"></i>${n}</span>`).join('')}
+      <button class="arrive-cta" onclick="arriveNext()">${C.arriveCta}</button></div>
+    <div style="min-height:0;display:grid;grid-template-rows:auto 1fr">
+      <div class="wall-label"><span>${C.wallLabel}</span></div>
+      <div class="wall${DATA.config.sixthSlot==='centered'?' centered':''}" id="wall">${DATA.captures.map(c=>cardHTML(c,false)).join('')}${DATA.config.sixthSlot==='yours'?openSlotHTML():''}</div></div>`;
+}
+renderAttract();
+
+/* ========================= arrival ========================= */
+let sessIdx=0,current=null,busy=false;
+function setTopicVars(el,p){
+  el.style.setProperty('--tc',p.base);el.style.setProperty('--tcdeep',p.deep);
+  el.style.setProperty('--tcglow',p.glow);el.style.setProperty('--tcshadow',p.shadow);
+  el.style.setProperty('--tctint',p.bubtint);
+  el.style.setProperty('--rvbg',`radial-gradient(120% 120% at 50% 40%, ${p.tint} 0%, ${p.tint2} 100%)`);
+}
+function arriveNext(){ if(busy)return; arrive(DATA.session[sessIdx++ % DATA.session.length]); }
+function arrive(c){
+  busy=true;current=c;
+  const p=palette(c.topic);
+  const rv=$('reveal');setTopicVars(rv,p);
+  rv.innerHTML=`
+    <div class="reveal-eyebrow"><span class="pulse"></span>${C.revealEyebrow}</div>
+    <div class="reveal-photo" style="--pbg:${photoBG(c,p)}"><span class="chip" style="background:${p.base}">${c.topic}</span></div>
+    <div class="reveal-side">
+      <div class="reveal-plabel">${C.revealPlabel}</div>
+      <div class="reveal-prompt">“${c.prompt}”</div>
+      <div class="saidbox">${c.said}</div>
+      <div class="invite" id="invite" style="display:none">
+        <p>${C.inviteText}</p>
+        <div class="row">
+          <button class="btn-go" onclick="startDiscuss()">${C.inviteGo}</button>
+          <button class="btn-pass" onclick="settle()">${C.invitePass}</button>
+        </div></div></div>
+    <div class="reveal-foot">${C.revealFoot}</div>`;
+  $('attract').style.opacity='.22';$('attract').style.filter='blur(3px)';
+  rv.classList.add('on');
+  setTimeout(()=>{ const inv=$('invite'); if(inv) inv.style.display='block'; },
+    DATA.config.holdBeforeInvite*1000);
+}
+function settle(){
+  $('reveal').classList.remove('on');$('discuss').classList.remove('on');$('keysScreen').classList.remove('on');
+  $('attract').style.opacity='1';$('attract').style.filter='none';
+  /* the wall is STATIC: nothing is created or deleted. The arriving
+     wondering's existing home tile glows once, as if waking up. */
+  if(current){
+    const tile=document.querySelector(`.cardw[data-topic="${CSS.escape(current.topic)}"]`);
+    if(tile){
+      tile.classList.remove('homeglow');void tile.offsetWidth;
+      tile.classList.add('homeglow');
+      setTimeout(()=>tile.classList.remove('homeglow'),2600);
+    }
+    current=null;
+  }
+  setTimeout(()=>busy=false,700);
+}
+
+/* ========================= discuss - construct ========================= */
+/* No child is simulated. Feedback is about the QUESTION'S FORM only:
+   open-shaped questions join the visitor's key set; closed-shaped ones
+   stay visible but dimmed, with a note and another go. */
+let accepted=0,userQuestions=[],nudgeLevel=0,nudgeTimer=null;
+
+function startDiscuss(){
+  const c=current,p=palette(c.topic);
+  accepted=0;userQuestions=[];nudgeLevel=0;
+  const d=$('discuss');setTopicVars(d,p);
+  d.innerHTML=`
+    <div class="d-head">
+      <div class="ph" style="--pbg:${photoBG(c,p)}"></div>
+      <div><span class="chip" style="background:${p.base}">${c.topic}</span>
+        <div class="said" style="margin-top:6px">${c.said}</div></div></div>
+    <div class="qlist-label">${C.qlistLabel}</div>
+    <div class="qlist" id="qlist"></div>
+    <div class="composer" id="composer">
+      <span class="ask" id="composerAsk">${C.composerAsk}</span>
+      <div class="c-row">
+        <input id="qInput" placeholder="${C.inputPlaceholder}" autocomplete="off" autocapitalize="sentences">
+        <button class="send" onclick="submitQuestion()">${C.send}</button>
+      </div>
+      <button class="stuck" id="stuckBtn" onclick="nudge()">${C.stuck[0]}</button>
+      <div class="coach" id="coach"></div>
+    </div>`;
+  $('reveal').classList.remove('on');d.classList.add('on');
+  $('qInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitQuestion();});
+  armNudgeTimer();
+}
+function armNudgeTimer(){
+  clearTimeout(nudgeTimer);
+  nudgeTimer=setTimeout(()=>{ if(nudgeLevel===0 && !$('qInput').value.trim()) nudge(); },
+    DATA.config.nudgeAfterSeconds*1000);
+}
+function nudge(){
+  nudgeLevel=Math.min(nudgeLevel+1,3);
+  console.log('[loci] nudge level reached:',nudgeLevel);   // observation aid
+  const coach=$('coach'),btn=$('stuckBtn');
+  coach.classList.add('on');
+  if(nudgeLevel===1){
+    coach.innerHTML=`<div class="tactic">${DATA.coach.tactic}</div>`;
+    btn.textContent=C.stuck[1];
+  }else if(nudgeLevel===2){
+    coach.innerHTML=`<div class="tactic">${DATA.coach.tactic}</div>
+      <div class="chips">${DATA.coach.starters.map(x=>
+        `<button class="chipbtn" onclick="useStarter(this)">${x}</button>`).join('')}</div>`;
+    btn.textContent=C.stuck[2];
+  }else{
+    const b=DATA.exchanges[current.topic].borrow;
+    coach.innerHTML=`<div class="tactic">${DATA.coach.tactic}</div>
+      <div class="chips">${DATA.coach.starters.map(x=>
+        `<button class="chipbtn" onclick="useStarter(this)">${x}</button>`).join('')}</div>
+      <div class="chips">${b.map(q=>
+        `<button class="chipbtn" style="border-style:dashed" onclick="borrowQuestion(this)">“${q}”</button>`).join('')}</div>`;
+    btn.style.display='none';
+  }
+}
+function useStarter(el){
+  const inp=$('qInput');
+  inp.value=el.textContent.replace(/…$/,' ');
+  inp.focus();
+}
+function borrowQuestion(el){
+  $('qInput').value=el.textContent.replace(/[“”]/g,'');
+  submitQuestion(true);
+}
+function addQ(text,dim,notes){
+  const el=document.createElement('div');
+  el.className='qcard'+(dim?' dim':'');
+  el.innerHTML=`<div class="qtext">“${text}”</div>`+
+    (notes||[]).map(n=>`<div class="qnote">${n}</div>`).join('');
+  $('qlist').appendChild(el);$('qlist').scrollTop=$('qlist').scrollHeight;
+}
+function submitQuestion(borrowed){
+  const inp=$('qInput'),raw=inp.value.trim();
+  const kind=classify(raw);
+  if(!kind)return;
+  console.log('[loci] question:',JSON.stringify(raw),'→',kind,borrowed?'(borrowed)':'');
+  inp.value='';
+  if(kind==='open'){
+    addQ(raw,false);
+    userQuestions.push(raw);
+    accepted++;
+    if(accepted>=DATA.config.questionsBeforeLanding){inp.blur();setTimeout(showLanding,700);}
+    else{$('composerAsk').textContent=C.composerAskNext;inp.focus();armNudgeTimer();}
+  }else{
+    const note=(kind==='closed')?DATA.closedNote:DATA.statementNote;
+    addQ(raw,true,[note,DATA.retryHint]);
+    if(nudgeLevel===0)nudge();
+    inp.focus();
+  }
+}
+function showLanding(){
+  $('composer').innerHTML=`<div class="landing">
+    <span class="ask">${C.landingAsk}</span>
+    <div class="sumkey">${C.sumBtn}</div>
+    <button class="btn-sum" onclick="showKeys()">${C.keysGo}</button></div>`;
+}
+function showKeys(){
+  const E=DATA.keysEnd,p=palette(current.topic);
+  const k=$('keysScreen');setTopicVars(k,p);
+  const yours=userQuestions.map(q=>`<div class="keycard yours"><div class="q">“${q}”</div><div class="why">${E.yoursWhy}</div></div>`).join('');
+  k.innerHTML=`
+    <div class="eyebrow">${E.eyebrow}</div><div class="big">${E.title}</div><div class="sub">${E.sub}</div>
+    <div class="keys">${yours}${E.keys.map(x=>`<div class="keycard"><div class="q">${x.q}</div><div class="why">${x.why}</div></div>`).join('')}</div>
+    <div class="tactline">${E.tact}</div>
+    <button class="btn-done" onclick="settle()">${E.done}</button>`;
+  $('discuss').classList.remove('on');k.classList.add('on');
+}
+
+/* ========================= exhibition housekeeping ========================= */
+setInterval(()=>{ if(!busy) arriveNext(); }, DATA.config.autoArriveEvery*1000);
+let idleT;
+function armIdle(){clearTimeout(idleT);
+  idleT=setTimeout(()=>{ if($('discuss').classList.contains('on')||$('keysScreen').classList.contains('on')||$('reveal').classList.contains('on')) settle(); },
+  DATA.config.idleResetSeconds*1000);}
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,armIdle));armIdle();
+document.addEventListener('contextmenu',e=>e.preventDefault());
+async function lockScreen(){try{await navigator.wakeLock.request('screen');}catch(e){}}
+lockScreen();
+document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&lockScreen());
+</script>
+</body>
+</html>

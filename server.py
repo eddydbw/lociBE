@@ -473,7 +473,7 @@ def set_prompts():
 
 ADMIN_HTML   = open(str(BASE_DIR / "admin.html"),  encoding="utf-8").read()
 PARENT_HTML  = open(str(BASE_DIR / "parent.html"), encoding="utf-8").read()
-EXHIBIT_HTML = open(str(BASE_DIR / "loci-exhibit-v2.html"), encoding="utf-8").read()
+EXHIBIT_HTML = open(str(BASE_DIR / "loci-standalone-construct.html"), encoding="utf-8").read()
 
 @app.route("/admin")
 @app.route("/admin/<device_id>")
