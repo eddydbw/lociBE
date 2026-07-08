@@ -56,11 +56,11 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 .wall-label{display:flex;align-items:center;gap:14px;margin:2vmin 0 1.3vmin}
 .wall-label span{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.5vmin,17px);white-space:nowrap}
 .wall-label::after{content:"";flex:1;height:1px;background:var(--line)}
-.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1.9vmin;align-content:start;overflow:hidden}
+.wall{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.9vmin;min-height:0;overflow:hidden}
 .cardw{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--tc,#bbb);
-  border-radius:18px;overflow:hidden;display:flex;flex-direction:column;animation:breathe 7s ease-in-out infinite}
+  border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-height:0;animation:breathe 7s ease-in-out infinite}
 @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.cardw .photo{aspect-ratio:4/3;display:flex;align-items:flex-end;padding:10px;
+.cardw .photo{flex:1;min-height:0;display:flex;align-items:flex-end;padding:10px;
   background:var(--pbg);background-size:cover;background-position:center}
 .chip{font-family:'Coming Soon',cursive;font-size:12px;color:var(--ink);background:var(--tc,#999);
   padding:4px 11px;border-radius:999px;box-shadow:0 2px 8px -2px rgba(0,0,0,.25)}
@@ -116,10 +116,17 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 .btn-pass{background:none;border:1.5px solid var(--line);color:var(--soft);padding:11px 18px;border-radius:999px;font-size:clamp(13px,1.8vmin,17px)}
 
 /* ================= DISCUSS (construct) ================= */
-.discuss{position:absolute;inset:0;background:var(--rvbg,var(--cream));
-  display:flex;flex-direction:column;max-width:900px;margin:0 auto;padding:4vmin 5.4vmin 2.6vmin;
+.discuss{position:absolute;top:3vmin;left:3vmin;right:3vmin;bottom:3vmin;background:var(--rvbg,var(--cream));
+  border-radius:26px;box-shadow:0 30px 70px -26px rgba(40,30,10,.3);
+  display:flex;flex-direction:column;padding:3.2vmin 4.6vmin 2.6vmin;
   opacity:0;pointer-events:none;transition:opacity .5s ease}
 .discuss.on{opacity:1;pointer-events:auto}
+.discuss-inner{width:100%;max-width:760px;margin:0 auto;height:100%;min-height:0;
+  display:flex;flex-direction:column}
+.close-x{position:absolute;top:1.6vmin;right:1.8vmin;width:44px;height:44px;border-radius:50%;
+  background:var(--card);border:1px solid var(--line);color:var(--soft);
+  display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1;z-index:5}
+.close-x:active{transform:scale(.94)}
 .d-head{display:flex;gap:2vmin;align-items:center;margin-bottom:1.8vmin;
   background:var(--card);border:1px solid var(--line);border-left:5px solid var(--tc,#999);
   border-radius:16px;padding:1.4vmin 1.8vmin}
@@ -178,10 +185,12 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 
 
 /* ================= KEYS ================= */
-.keysScreen{position:absolute;inset:0;background:var(--cream);display:flex;flex-direction:column;
-  justify-content:center;max-width:980px;margin:0 auto;padding:5vmin 6vmin;
+.keysScreen{position:absolute;top:3vmin;left:3vmin;right:3vmin;bottom:3vmin;background:var(--rvbg,var(--cream));
+  border-radius:26px;box-shadow:0 30px 70px -26px rgba(40,30,10,.3);
+  display:flex;flex-direction:column;justify-content:center;padding:5vmin 6vmin;
   opacity:0;pointer-events:none;transition:opacity .5s ease}
 .keysScreen.on{opacity:1;pointer-events:auto}
+.keysScreen-inner{width:100%;max-width:980px;margin:0 auto}
 .eyebrow{font-family:'Coming Soon',cursive;color:var(--tcdeep,#a76b1c);font-size:clamp(13px,1.8vmin,18px);margin-bottom:1vmin}
 .big{font-family:'Mansalva',cursive;font-size:clamp(26px,5vmin,50px);line-height:1.1}
 .sub{color:var(--soft);font-size:clamp(13.5px,1.9vmin,19px);line-height:1.5;margin-top:1.2vmin;max-width:56ch}
@@ -419,6 +428,8 @@ function startDiscuss(){
   accepted=0;userQuestions=[];nudgeLevel=0;
   const d=$('discuss');setTopicVars(d,p);
   d.innerHTML=`
+    <button class="close-x" onclick="settle()" aria-label="back to the wall">✕</button>
+    <div class="discuss-inner">
     <div class="d-head">
       <div class="ph" style="--pbg:${photoBG(c,p)}"></div>
       <div><span class="chip" style="background:${p.base}">${c.topic}</span>
@@ -433,7 +444,7 @@ function startDiscuss(){
       </div>
       <button class="stuck" id="stuckBtn" onclick="nudge()">${C.stuck[0]}</button>
       <div class="coach" id="coach"></div>
-    </div>`;
+    </div></div>`;
   $('reveal').classList.remove('on');d.classList.add('on');
   $('qInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitQuestion();});
   armNudgeTimer();
@@ -512,10 +523,12 @@ function showKeys(){
   const k=$('keysScreen');setTopicVars(k,p);
   const yours=userQuestions.map(q=>`<div class="keycard yours"><div class="q">“${q}”</div><div class="why">${E.yoursWhy}</div></div>`).join('');
   k.innerHTML=`
+    <button class="close-x" onclick="settle()" aria-label="back to the wall">✕</button>
+    <div class="keysScreen-inner">
     <div class="eyebrow">${E.eyebrow}</div><div class="big">${E.title}</div><div class="sub">${E.sub}</div>
     <div class="keys">${yours}${E.keys.map(x=>`<div class="keycard"><div class="q">${x.q}</div><div class="why">${x.why}</div></div>`).join('')}</div>
     <div class="tactline">${E.tact}</div>
-    <button class="btn-done" onclick="settle()">${E.done}</button>`;
+    <button class="btn-done" onclick="settle()">${E.done}</button></div>`;
   $('discuss').classList.remove('on');k.classList.add('on');
 }
 
