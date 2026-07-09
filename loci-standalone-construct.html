@@ -36,14 +36,14 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 
 /* ================= ATTRACT ================= */
 .attract{position:absolute;inset:0;display:grid;grid-template-rows:auto auto 1fr;
-  padding:3.4vmin 4.6vmin 2.4vmin;transition:opacity .8s ease,filter .8s ease}
+  padding:2.6vmin 4.6vmin 2vmin;transition:opacity .8s ease,filter .8s ease}
 .masthead{display:flex;align-items:baseline;gap:2vmin;flex-wrap:wrap}
 .wordmark{font-family:'Mansalva',cursive;font-size:clamp(32px,5.6vmin,66px);line-height:1}
 .tagline{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(14px,1.9vmin,23px)}
-.pitch{margin-top:1vmin;max-width:64ch;font-size:clamp(13.5px,1.8vmin,20px);line-height:1.45;color:var(--soft)}
+.pitch{margin-top:1vmin;max-width:64ch;font-size:clamp(15px,2vmin,22px);line-height:1.45;color:var(--soft)}
 .pitch b{color:var(--ink);font-weight:500}
 .legendrow{display:flex;flex-wrap:wrap;gap:1vmin 2.4vmin;align-items:center;
-  margin-top:1.6vmin;padding-top:1.4vmin;border-top:1px solid var(--line)}
+  margin-top:1.1vmin;padding-top:1.1vmin;border-top:1px solid var(--line)}
 .legendrow .lead{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.5vmin,16px)}
 .key-dot{display:inline-flex;align-items:center;gap:7px;font-size:clamp(11px,1.4vmin,15px)}
 .key-dot i{width:10px;height:10px;border-radius:50%;flex:none}
@@ -53,20 +53,32 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
   animation:beckon 2.6s ease-in-out infinite;box-shadow:0 8px 22px -10px var(--amber);
 }
 @keyframes beckon{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.wall-label{display:flex;align-items:center;gap:14px;margin:2vmin 0 1.3vmin}
+.wall-label{display:flex;align-items:center;gap:14px;margin:1.2vmin 0 .9vmin}
 .wall-label span{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.5vmin,17px);white-space:nowrap}
 .wall-label::after{content:"";flex:1;height:1px;background:var(--line)}
 .wall{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.9vmin;min-height:0;overflow:hidden}
 .cardw{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--tc,#bbb);
   border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-height:0;animation:breathe 7s ease-in-out infinite}
 @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.cardw .photo{flex:1;min-height:0;display:flex;align-items:flex-end;padding:10px;
+.cardw .photo{flex:1;min-height:9.5vmin;position:relative;display:flex;align-items:flex-end;padding:10px;
   background:var(--pbg);background-size:cover;background-position:center}
-.chip{font-family:'Coming Soon',cursive;font-size:12px;color:var(--ink);background:var(--tc,#999);
-  padding:4px 11px;border-radius:999px;box-shadow:0 2px 8px -2px rgba(0,0,0,.25)}
-.cardw .body{padding:10px 13px 12px}
-.cardw .prompt{font-size:12.5px;color:var(--soft);line-height:1.35;margin-bottom:6px}
-.cardw .resp{font-family:'Coming Soon',cursive;font-size:14px;line-height:1.4}
+.chip{font-family:'Coming Soon',cursive;font-size:13px;color:var(--ink);background:var(--tc,#999);
+  padding:4px 12px;border-radius:999px;box-shadow:0 2px 8px -2px rgba(0,0,0,.25);position:relative;z-index:1}
+.cardw .body{padding:10px 14px 13px}
+.cardw .prompt{font-size:clamp(12.5px,1.6vmin,15px);color:var(--soft);line-height:1.35;margin-bottom:6px}
+.cardw .resp{font-family:'Coming Soon',cursive;font-size:clamp(14px,1.9vmin,18px);line-height:1.4}
+/* placeholder when a capture has no photoUrl: sketch + handwritten label */
+.ph-note{pointer-events:none;text-align:center;
+  font-family:'Coming Soon',cursive;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.ph-note svg{opacity:.85}
+/* wall card: label shares the chip's bottom row - chip left, label right */
+.photo .ph-note{flex:1;min-width:0;padding:0 2px 5px 10px;text-align:right;
+  font-size:clamp(12.5px,1.7vmin,16px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.photo .ph-note svg{display:none}
+/* reveal: centred sketch + label */
+.reveal-photo .ph-note{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:7px;padding:8% 12%;font-size:clamp(17px,2.5vmin,27px)}
+.reveal-photo .ph-note svg{width:44px;height:44px}
 .cardw.fresh{animation:landin .7s cubic-bezier(.2,.8,.2,1) both,glowring 2.4s ease-out .5s both,breathe 7s ease-in-out 3s infinite}
 @keyframes landin{from{opacity:0;transform:scale(.88) translateY(22px)}to{opacity:1;transform:none}}
 @keyframes glowring{0%{box-shadow:0 0 0 0 var(--tcglow)}100%{box-shadow:0 0 0 22px rgba(0,0,0,0)}}
@@ -91,7 +103,7 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
   color:var(--tcdeep,#a76b1c);font-size:clamp(13px,1.7vmin,19px);display:flex;align-items:center;gap:10px}
 .reveal-eyebrow .pulse{width:11px;height:11px;border-radius:50%;background:var(--tc,#f3b13c);animation:pulse 1.6s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 var(--tcglow,rgba(243,177,60,.55))}70%{box-shadow:0 0 0 16px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
-.reveal-photo{border-radius:24px;overflow:hidden;aspect-ratio:4/3;
+.reveal-photo{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:4/3;
   box-shadow:0 24px 60px -18px var(--tcshadow,rgba(90,70,30,.35));
   display:flex;align-items:flex-end;padding:16px;background:var(--pbg);
   background-size:cover;background-position:center;transform:scale(.96);opacity:0}
@@ -100,20 +112,20 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 .reveal-side{transform:translateY(14px);opacity:0}
 .reveal.on .reveal-side{animation:sideIn .7s .35s cubic-bezier(.2,.8,.2,1) both}
 @keyframes sideIn{to{transform:none;opacity:1}}
-.reveal-plabel{font-family:'Coming Soon',cursive;color:var(--tcdeep,var(--soft));font-size:clamp(12px,1.5vmin,16px);margin-bottom:8px}
-.reveal-prompt{font-size:clamp(19px,2.9vmin,35px);line-height:1.25;font-weight:500;margin-bottom:2.6vmin}
-.saidbox{font-family:'Coming Soon',cursive;font-size:clamp(14px,1.9vmin,22px);line-height:1.45;
+.reveal-plabel{font-family:'Coming Soon',cursive;color:var(--tcdeep,var(--soft));font-size:clamp(14px,1.8vmin,19px);margin-bottom:8px}
+.reveal-prompt{font-size:clamp(22px,3.2vmin,38px);line-height:1.25;font-weight:500;margin-bottom:2.6vmin}
+.saidbox{font-family:'Coming Soon',cursive;font-size:clamp(17px,2.3vmin,26px);line-height:1.45;
   border-left:3px solid var(--tc,var(--blue));padding-left:15px}
 .reveal-foot{position:absolute;bottom:3.8vmin;left:6vmin;right:6vmin;text-align:center;
-  font-size:clamp(11.5px,1.5vmin,16px);color:var(--soft)}
+  font-size:clamp(13px,1.7vmin,18px);color:var(--soft)}
 .invite{margin-top:3.2vmin;background:var(--card);border:1.5px dashed var(--tc,#999);
-  border-radius:16px;padding:14px 16px;opacity:0}
+  border-radius:16px;padding:16px 18px;opacity:0}
 .reveal.on .invite{animation:sideIn .6s 1.6s ease forwards}
-.invite p{font-size:clamp(13px,1.8vmin,18px);color:var(--soft);margin-bottom:10px}
+.invite p{font-size:clamp(15px,2.1vmin,21px);color:var(--soft);margin-bottom:12px}
 .invite p b{color:var(--ink);font-weight:500}
 .invite .row{display:flex;gap:10px;flex-wrap:wrap}
-.btn-go{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:11px 20px;border-radius:999px;font-size:clamp(13px,1.8vmin,17px)}
-.btn-pass{background:none;border:1.5px solid var(--line);color:var(--soft);padding:11px 18px;border-radius:999px;font-size:clamp(13px,1.8vmin,17px)}
+.btn-go{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:13px 24px;border-radius:999px;font-size:clamp(15px,2.1vmin,20px)}
+.btn-pass{background:none;border:1.5px solid var(--line);color:var(--soft);padding:13px 22px;border-radius:999px;font-size:clamp(15px,2.1vmin,20px)}
 
 /* ================= DISCUSS (construct) ================= */
 .discuss{position:absolute;top:3vmin;left:3vmin;right:3vmin;bottom:3vmin;background:var(--rvbg,var(--cream));
@@ -123,87 +135,88 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 .discuss.on{opacity:1;pointer-events:auto}
 .discuss-inner{width:100%;max-width:760px;margin:0 auto;height:100%;min-height:0;
   display:flex;flex-direction:column}
-.close-x{position:absolute;top:1.6vmin;right:1.8vmin;width:44px;height:44px;border-radius:50%;
+.close-x{position:absolute;top:1.6vmin;right:1.8vmin;width:54px;height:54px;border-radius:50%;
   background:var(--card);border:1px solid var(--line);color:var(--soft);
-  display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1;z-index:5}
+  display:flex;align-items:center;justify-content:center;font-size:23px;line-height:1;z-index:5}
 .close-x:active{transform:scale(.94)}
 .d-head{display:flex;gap:2vmin;align-items:center;margin-bottom:1.8vmin;
   background:var(--card);border:1px solid var(--line);border-left:5px solid var(--tc,#999);
   border-radius:16px;padding:1.4vmin 1.8vmin}
-.d-head .ph{width:clamp(56px,9.5vmin,96px);aspect-ratio:1;border-radius:12px;flex:none;
+.d-head .ph{width:clamp(72px,12vmin,120px);aspect-ratio:1;border-radius:12px;flex:none;
   background:var(--pbg);background-size:cover;background-position:center}
-.d-head .said{font-family:'Coming Soon',cursive;font-size:clamp(13px,1.9vmin,19px);line-height:1.4}
+.d-head .said{font-family:'Coming Soon',cursive;font-size:clamp(16px,2.3vmin,24px);line-height:1.4}
 /* your questions for this wondering */
-.qlist-label{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.6vmin,16px);margin-bottom:.7vmin}
+.qlist-label{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(14px,1.9vmin,19px);margin-bottom:.7vmin}
 .qlist{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:1.1vmin;
   padding:.3vmin .3vmin 1.4vmin;-webkit-overflow-scrolling:touch}
 @keyframes pop{to{opacity:1;transform:none}}
 .qcard{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--tc,#999);
-  border-radius:14px;padding:12px 15px;opacity:0;transform:translateY(10px);animation:pop .4s ease forwards}
-.qcard .qtext{font-family:'Coming Soon',cursive;font-size:clamp(14px,2vmin,19px);line-height:1.45}
+  border-radius:14px;padding:14px 17px;opacity:0;transform:translateY(10px);animation:pop .4s ease forwards}
+.qcard .qtext{font-family:'Coming Soon',cursive;font-size:clamp(17px,2.4vmin,24px);line-height:1.45}
 .qcard.dim{border-left-color:var(--line)}
 .qcard.dim .qtext{opacity:.6;font-family:'Outfit',sans-serif}
-.qcard .qnote{margin-top:6px;color:var(--soft);font-size:clamp(11.5px,1.6vmin,15px);font-style:italic}
+.qcard .qnote{margin-top:6px;color:var(--soft);font-size:clamp(14px,1.9vmin,18px);font-style:italic}
 
 /* the composer - the generation moment */
-.composer{padding-top:1.2vmin;border-top:1px solid var(--line)}
-.composer .ask{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12.5px,1.7vmin,16px)}
-.c-row{display:flex;gap:10px;margin-top:.9vmin}
+.composer{padding-top:1.4vmin;border-top:1px solid var(--line)}
+.composer .ask{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(15px,2.1vmin,20px)}
+.c-row{display:flex;gap:12px;margin-top:1vmin}
 #qInput{
-  flex:1;font-family:'Outfit',sans-serif;font-size:clamp(14px,2vmin,19px);color:var(--ink);
-  background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 15px;outline:none;
+  flex:1;font-family:'Outfit',sans-serif;font-size:clamp(18px,2.6vmin,24px);color:var(--ink);
+  background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px 18px;outline:none;
 }
 #qInput:focus{border-color:var(--tc,#999)}
-.send{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:0 22px;border-radius:14px;
-  font-size:clamp(13.5px,1.9vmin,18px)}
+.send{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:0 28px;border-radius:16px;
+  font-size:clamp(16px,2.3vmin,22px)}
 .stuck{
-  margin-top:.9vmin;background:none;border:none;color:var(--tcdeep,#888);
-  font-family:'Coming Soon',cursive;font-size:clamp(12.5px,1.7vmin,16px);
-  text-decoration:underline dotted;padding:4px 2px;
+  margin-top:1vmin;background:none;border:none;color:var(--tcdeep,#888);
+  font-family:'Coming Soon',cursive;font-size:clamp(15px,2.1vmin,19px);
+  text-decoration:underline dotted;padding:6px 2px;
 }
-.coach{margin-top:.9vmin;display:none}
+.coach{margin-top:1vmin;display:none}
 .coach.on{display:block;animation:pop .4s ease both}
 .coach .tactic{
   background:var(--card);border:1.5px dashed var(--tc,#999);border-radius:14px;
-  padding:12px 15px;font-size:clamp(12.5px,1.7vmin,16px);color:var(--soft);line-height:1.5;
+  padding:14px 17px;font-size:clamp(15px,2.1vmin,19px);color:var(--soft);line-height:1.5;
 }
 .coach .tactic b{color:var(--ink);font-weight:500}
-.coach .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:.8vmin}
+.coach .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:.9vmin}
 .coach .chipbtn{
   background:var(--card);border:1.5px solid var(--tc,#999);color:var(--ink);
-  border-radius:999px;padding:9px 15px;font-size:clamp(12.5px,1.7vmin,16px);
+  border-radius:999px;padding:12px 18px;font-size:clamp(15px,2.1vmin,19px);
   transition:transform .12s ease;
 }
 .coach .chipbtn:active{transform:scale(.96)}
 .landing{margin-top:.4vmin;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.landing .ask{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12.5px,1.7vmin,16px)}
-.btn-sum{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:11px 20px;border-radius:999px;
-  font-size:clamp(13px,1.8vmin,17px);animation:beckon 2.4s ease-in-out infinite}
-.sumkey{font-family:'Coming Soon',cursive;font-size:clamp(14px,2vmin,19px);background:var(--card);
-  border:1.5px dashed var(--tc,#999);border-radius:14px;padding:11px 16px}
+.landing .ask{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(15px,2.1vmin,19px)}
+.btn-sum{background:var(--tc,#999);color:var(--ink);font-weight:600;padding:13px 24px;border-radius:999px;
+  font-size:clamp(15px,2.1vmin,20px);animation:beckon 2.4s ease-in-out infinite}
+.sumkey{font-family:'Coming Soon',cursive;font-size:clamp(16px,2.3vmin,22px);background:var(--card);
+  border:1.5px dashed var(--tc,#999);border-radius:14px;padding:13px 18px}
 .keycard.yours{background:var(--tctint,var(--card))}
 
 
 /* ================= KEYS ================= */
 .keysScreen{position:absolute;top:3vmin;left:3vmin;right:3vmin;bottom:3vmin;background:var(--rvbg,var(--cream));
   border-radius:26px;box-shadow:0 30px 70px -26px rgba(40,30,10,.3);
-  display:flex;flex-direction:column;justify-content:center;padding:5vmin 6vmin;
+  display:flex;flex-direction:column;padding:3vmin 4.5vmin;overflow-y:auto;-webkit-overflow-scrolling:touch;
   opacity:0;pointer-events:none;transition:opacity .5s ease}
 .keysScreen.on{opacity:1;pointer-events:auto}
-.keysScreen-inner{width:100%;max-width:980px;margin:0 auto}
-.eyebrow{font-family:'Coming Soon',cursive;color:var(--tcdeep,#a76b1c);font-size:clamp(13px,1.8vmin,18px);margin-bottom:1vmin}
-.big{font-family:'Mansalva',cursive;font-size:clamp(26px,5vmin,50px);line-height:1.1}
-.sub{color:var(--soft);font-size:clamp(13.5px,1.9vmin,19px);line-height:1.5;margin-top:1.2vmin;max-width:56ch}
-.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.6vmin;margin-top:2.6vmin}
+/* margin:auto centres the block when it fits, scrolls when it doesn't */
+.keysScreen-inner{width:100%;max-width:980px;margin:auto;display:flex;flex-direction:column}
+.eyebrow{font-family:'Coming Soon',cursive;color:var(--tcdeep,#a76b1c);font-size:clamp(15px,2vmin,20px);margin-bottom:1vmin}
+.big{font-family:'Mansalva',cursive;font-size:clamp(30px,5.4vmin,54px);line-height:1.1}
+.sub{color:var(--soft);font-size:clamp(15px,2.1vmin,21px);line-height:1.45;margin-top:.8vmin;max-width:72ch}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.4vmin;margin-top:1.8vmin}
 .keycard{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--tc,#999);
-  border-radius:16px;padding:14px 16px;opacity:0;animation:pop .5s ease forwards}
+  border-radius:16px;padding:12px 14px;opacity:0;animation:pop .5s ease forwards}
 .keycard:nth-child(2){animation-delay:.1s}.keycard:nth-child(3){animation-delay:.2s}
 .keycard:nth-child(4){animation-delay:.3s}.keycard:nth-child(5){animation-delay:.4s}
-.keycard .q{font-family:'Coming Soon',cursive;font-size:clamp(14px,1.9vmin,18px);margin-bottom:5px}
-.keycard .why{color:var(--soft);font-size:clamp(11.5px,1.5vmin,14px);line-height:1.4}
-.tactline{margin-top:2vmin;font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12.5px,1.7vmin,16px)}
-.btn-done{margin-top:2.4vmin;align-self:flex-start;background:var(--tc,#999);color:var(--ink);font-weight:600;
-  padding:12px 24px;border-radius:999px;font-size:clamp(13.5px,1.9vmin,18px)}
+.keycard .q{font-family:'Coming Soon',cursive;font-size:clamp(15px,2vmin,19px);margin-bottom:5px}
+.keycard .why{color:var(--soft);font-size:clamp(13px,1.7vmin,16px);line-height:1.35}
+.tactline{margin-top:1.4vmin;font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(14px,1.9vmin,18px)}
+.btn-done{margin-top:1.8vmin;align-self:flex-start;background:var(--tc,#999);color:var(--ink);font-weight:600;
+  padding:14px 28px;border-radius:999px;font-size:clamp(15px,2.1vmin,20px)}
 </style>
 </head>
 <body>
@@ -250,7 +263,7 @@ const DATA = {
     starters:["Tell me more about…","What would be the opposite of…","Does this remind you of…","Where else have you seen…","Walk me through…"],
   },
 
-  config:{ holdBeforeInvite:4.5, autoArriveEvery:50, idleResetSeconds:120,
+  config:{ holdBeforeInvite:4.5, autoArriveEvery:50, idleResetSeconds:120, inviteTimeoutSeconds:20,
            maxWallCards:9, sixthSlot:"yours" /* "yours" | "centered" */, nudgeAfterSeconds:14, questionsBeforeLanding:2 },
 
   topics:{ /* real zine palette - single source of truth */
@@ -262,11 +275,11 @@ const DATA = {
   },
 
   captures:[
-    {topic:"Is It Art?", prompt:"Walk me through why you think it counts.", response:"It’s art because someone wanted me to look at it differently."},
-    {topic:"Reality", prompt:"Tell me about something real that you can’t touch.", response:"A song is real but it only exists while it’s happening."},
-    {topic:"The Invisible Ring", prompt:"Walk me through what you’d do if no one could see you.", response:"I’d be good anyway, but it would be harder to choose."},
-    {topic:"Lying", prompt:"Tell me about a time a small lie felt kind.", response:"Saying you like the present even if you don’t."},
-    {topic:"Beautiful", prompt:"Tell me what made you stop and look.", response:"It was beautiful because it was a little bit broken."},
+    {topic:"Is It Art?", prompt:"Walk me through why you think it counts.", response:"It’s art because someone wanted me to look at it differently.", photoLabel:"something put there on purpose"},
+    {topic:"Reality", prompt:"Tell me about something real that you can’t touch.", response:"A song is real but it only exists while it’s happening.", photoLabel:"where the song was playing"},
+    {topic:"The Invisible Ring", prompt:"Walk me through what you’d do if no one could see you.", response:"I’d be good anyway, but it would be harder to choose.", photoLabel:"the garden, with nobody watching"},
+    {topic:"Lying", prompt:"Tell me about a time a small lie felt kind.", response:"Saying you like the present even if you don’t.", photoLabel:"the present, still wrapped"},
+    {topic:"Beautiful", prompt:"Tell me what made you stop and look.", response:"It was beautiful because it was a little bit broken.", photoLabel:"the little broken thing"},
   ],
 
   session:[
@@ -320,6 +333,12 @@ function palette(topic){
     glow:base+'B3',shadow:base+'73'};
 }
 function photoBG(c,p){return c.photoUrl?`url(${c.photoUrl})`:`linear-gradient(135deg,${p.photoA} 0%,${p.photoB} 100%)`;}
+/* no photoUrl yet → sketch of a lens + the child's handwritten photo label */
+const CAM_SVG=`<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="4"/><path d="M9 7l1.2-2.4h3.6L15 7"/></svg>`;
+function photoNote(c){
+  if(c.photoUrl||!c.photoLabel)return'';
+  return `<span class="ph-note">${CAM_SVG}${c.photoLabel}</span>`;
+}
 const $=id=>document.getElementById(id);
 function wc(s){return s.split(/\s+/).filter(Boolean).length;}
 
@@ -346,7 +365,7 @@ const C=DATA.copy;
 function cardHTML(c,fresh){
   const p=palette(c.topic);
   return `<div class="cardw" data-topic="${c.topic}" style="--tc:${p.base};--tcglow:${p.glow};--pbg:${photoBG(c,p)}">
-    <div class="photo"><span class="chip" style="background:${p.base}">${c.topic}</span></div>
+    <div class="photo"><span class="chip" style="background:${p.base}">${c.topic}</span>${photoNote(c)}</div>
     <div class="body"><div class="prompt">“${c.prompt}”</div><div class="resp">${c.response}</div></div></div>`;
 }
 function openSlotHTML(){
@@ -369,7 +388,7 @@ function renderAttract(){
 renderAttract();
 
 /* ========================= arrival ========================= */
-let sessIdx=0,current=null,busy=false;
+let sessIdx=0,current=null,busy=false,inviteTimer=null;
 function setTopicVars(el,p){
   el.style.setProperty('--tc',p.base);el.style.setProperty('--tcdeep',p.deep);
   el.style.setProperty('--tcglow',p.glow);el.style.setProperty('--tcshadow',p.shadow);
@@ -379,11 +398,12 @@ function setTopicVars(el,p){
 function arriveNext(){ if(busy)return; arrive(DATA.session[sessIdx++ % DATA.session.length]); }
 function arrive(c){
   busy=true;current=c;
+  clearTimeout(inviteTimer);
   const p=palette(c.topic);
   const rv=$('reveal');setTopicVars(rv,p);
   rv.innerHTML=`
     <div class="reveal-eyebrow"><span class="pulse"></span>${C.revealEyebrow}</div>
-    <div class="reveal-photo" style="--pbg:${photoBG(c,p)}"><span class="chip" style="background:${p.base}">${c.topic}</span></div>
+    <div class="reveal-photo" style="--pbg:${photoBG(c,p)}">${photoNote(c)}<span class="chip" style="background:${p.base}">${c.topic}</span></div>
     <div class="reveal-side">
       <div class="reveal-plabel">${C.revealPlabel}</div>
       <div class="reveal-prompt">“${c.prompt}”</div>
@@ -397,10 +417,15 @@ function arrive(c){
     <div class="reveal-foot">${C.revealFoot}</div>`;
   $('attract').style.opacity='.22';$('attract').style.filter='blur(3px)';
   rv.classList.add('on');
-  setTimeout(()=>{ const inv=$('invite'); if(inv) inv.style.display='block'; },
-    DATA.config.holdBeforeInvite*1000);
+  setTimeout(()=>{
+    const inv=$('invite'); if(inv) inv.style.display='block';
+    clearTimeout(inviteTimer);
+    inviteTimer=setTimeout(()=>{ if($('reveal').classList.contains('on')) settle(); },
+      DATA.config.inviteTimeoutSeconds*1000);
+  }, DATA.config.holdBeforeInvite*1000);
 }
 function settle(){
+  clearTimeout(inviteTimer);
   $('reveal').classList.remove('on');$('discuss').classList.remove('on');$('keysScreen').classList.remove('on');
   $('attract').style.opacity='1';$('attract').style.filter='none';
   /* the wall is STATIC: nothing is created or deleted. The arriving
@@ -424,6 +449,7 @@ function settle(){
 let accepted=0,userQuestions=[],nudgeLevel=0,nudgeTimer=null;
 
 function startDiscuss(){
+  clearTimeout(inviteTimer);
   const c=current,p=palette(c.topic);
   accepted=0;userQuestions=[];nudgeLevel=0;
   const d=$('discuss');setTopicVars(d,p);
