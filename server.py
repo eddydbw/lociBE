@@ -52,6 +52,17 @@ def init_db():
                 created_at  REAL
             )
         """)
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS wonders (
+                id          TEXT PRIMARY KEY,
+                device_id   TEXT,
+                topic       TEXT,
+                prompt      TEXT,
+                response    TEXT,
+                photo_path  TEXT,
+                created_at  REAL
+            )
+        """)
         db.execute("DROP TABLE IF EXISTS prompts")
         db.execute("""
             CREATE TABLE IF NOT EXISTS steps (
@@ -518,6 +529,112 @@ def exhibit_manifest():
 @app.route("/exhibit/<device_id>")
 def exhibit(device_id="demo"):
     return EXHIBIT_HTML, 200, {"Content-Type": "text/html"}
+
+# ---------------------------------------------------------------------------
+# Exhibit 2 — the visitors' wall: infinite scroll of wonderings sent from
+# phones, same construct-a-question mechanism on tap.
+# ---------------------------------------------------------------------------
+EXHIBIT2_HTML = open(str(BASE_DIR / "loci-exhibit-scroll.html"), encoding="utf-8").read()
+
+EXHIBIT2_MANIFEST = dict(EXHIBIT_MANIFEST,
+                         id="/exhibit2/demo", start_url="/exhibit2/demo",
+                         scope="/exhibit2", name="Loci — Visitors' Wall")
+
+@app.route("/exhibit2/manifest.webmanifest")
+def exhibit2_manifest():
+    resp = jsonify(EXHIBIT2_MANIFEST)
+    resp.headers["Content-Type"] = "application/manifest+json"
+    return resp
+
+@app.route("/exhibit2")
+@app.route("/exhibit2/<device_id>")
+def exhibit2(device_id="demo"):
+    return EXHIBIT2_HTML, 200, {"Content-Type": "text/html"}
+
+# ---------------------------------------------------------------------------
+# Visitor wonderings — phone page reached by QR code on the exhibit tablet.
+# A visitor picks a topic, gets a camera prompt, sends photo + a sentence;
+# the exhibit page polls /api/wonders and reveals new ones live.
+# ---------------------------------------------------------------------------
+WONDER_HTML = open(str(BASE_DIR / "wonder.html"), encoding="utf-8").read()
+
+@app.route("/wonder")
+@app.route("/wonder/<device_id>")
+def wonder(device_id="demo"):
+    return WONDER_HTML, 200, {"Content-Type": "text/html"}
+
+@app.route("/exhibit/qr.svg")
+def exhibit_qr():
+    import io
+    import segno
+    device_id = request.args.get("device", "demo")
+    scheme = request.headers.get("X-Forwarded-Proto", request.scheme)
+    url = f"{scheme}://{request.host}/wonder/{device_id}"
+    buff = io.BytesIO()
+    segno.make(url, error="m").save(buff, kind="svg", scale=4,
+                                    dark="#2A2620", light=None, border=1)
+    return Response(buff.getvalue(), mimetype="image/svg+xml",
+                    headers={"Cache-Control": "no-cache"})
+
+@app.route("/api/wonders", methods=["POST"])
+def create_wonder():
+    topic = (request.form.get("topic") or "").strip()
+    if topic not in TOPIC_SLUGS:
+        return jsonify({"ok": False, "error": "unknown topic"}), 400
+    if "photo" not in request.files or not request.files["photo"].filename:
+        return jsonify({"ok": False, "error": "no photo"}), 400
+    prompt    = " ".join((request.form.get("prompt") or "").split())[:200]
+    response  = " ".join((request.form.get("response") or "").split())[:500]
+    device_id = (request.form.get("device_id") or "demo").strip()[:64]
+    wonder_id = str(uuid.uuid4())
+    photo_path = PHOTOS_DIR / f"wonder-{wonder_id}.jpg"
+    request.files["photo"].save(str(photo_path))
+    with get_db() as db:
+        db.execute(
+            "INSERT INTO wonders (id, device_id, topic, prompt, response, photo_path, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (wonder_id, device_id, topic, prompt, response, str(photo_path), time.time())
+        )
+        db.commit()
+    print(f"[wonder] {wonder_id}  '{prompt}'  {device_id}  topic={topic}")
+    return jsonify({"ok": True, "wonder_id": wonder_id}), 200
+
+@app.route("/api/wonders/<device_id>")
+def list_wonders(device_id):
+    """Default: newest 30, oldest-first (exhibit 1 reveals in order).
+    ?order=desc&limit=N&before=<created_at>: newest-first pages for the
+    exhibit 2 scrolling wall."""
+    try:
+        limit = min(max(int(request.args.get("limit", 30)), 1), 60)
+    except ValueError:
+        limit = 30
+    desc = request.args.get("order") == "desc"
+    q = "SELECT * FROM wonders WHERE device_id=?"
+    args = [device_id]
+    before = request.args.get("before")
+    if before:
+        try:
+            q += " AND created_at<?"
+            args.append(float(before))
+        except ValueError:
+            pass
+    q += " ORDER BY created_at DESC LIMIT ?"
+    args.append(limit)
+    with get_db() as db:
+        rows = db.execute(q, args).fetchall()
+    if not desc:
+        rows = list(reversed(rows))   # oldest first
+    out = []
+    for r in rows:
+        out.append({
+            "id":       r["id"],
+            "topic":    r["topic"],
+            "prompt":   r["prompt"],
+            "response": r["response"],
+            "photoUrl": f"/uploads/photos/{Path(r['photo_path']).name}",
+            "created_at": r["created_at"],
+        })
+    return jsonify(out)
 
 @app.route("/api/debug/prompts")
 def debug_prompts():

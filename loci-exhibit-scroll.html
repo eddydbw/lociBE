@@ -3,21 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Loci - connect &amp; discuss (construct)</title>
+<title>Loci - the visitors' wall (exhibit 2)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mansalva&family=Coming+Soon&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ==========================================================================
-   LOCI - STANDALONE TABLET  ·  V2 "CONSTRUCT"
+   LOCI - EXHIBIT 2  ·  "THE VISITORS' WALL"
    --------------------------------------------------------------------------
-   HYPOTHESIS (upgraded): a parent who CONSTRUCTS a question - helped only
-   when they struggle, by an escalating ladder of nudges - internalises the
-   facilitation moves more deeply than one who picks from multiple choice.
-   No child is simulated. Feedback is about the QUESTION'S FORM only
-   (classifier from the project's own finding: tell/what/where/walk demands
-   construction; is/can/do/would allows a one-word exit).
-   Keep V1 (multiple choice) alive - run both at the test run and compare.
+   Same construct mechanism as the V2 exhibit page - but the wall is made of
+   wonderings VISITORS catch on their own phones (/wonder, via the QR card).
+   The wall scrolls endlessly (looping when the feed runs out, with the QR
+   card woven back in); new wonderings arrive live and land at the top; any
+   card can be tapped to re-reveal it and try constructing questions for it.
    ========================================================================== */
 :root{
   --cream:#FFFDF4;--card:#FFFEFB;--ink:#2A2620;--soft:#7A7466;--line:#E9E3D2;
@@ -56,11 +54,15 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 .wall-label{display:flex;align-items:center;gap:14px;margin:1.2vmin 0 .9vmin}
 .wall-label span{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.5vmin,17px);white-space:nowrap}
 .wall-label::after{content:"";flex:1;height:1px;background:var(--line)}
-.wall{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:1.9vmin;min-height:0;overflow:hidden}
+/* the wall scrolls; cards are uniform, photo-led */
+.wallwrap{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;padding:.3vmin .3vmin 2vmin}
+.wall{display:grid;grid-template-columns:repeat(3,1fr);gap:1.9vmin}
 .cardw{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--tc,#bbb);
-  border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-height:0;animation:breathe 7s ease-in-out infinite}
+  border-radius:18px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;
+  animation:breathe 7s ease-in-out infinite}
 @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.cardw .photo{flex:1;min-height:9.5vmin;position:relative;display:flex;align-items:flex-end;padding:10px;
+.cardw .photo{aspect-ratio:4/3;position:relative;display:flex;align-items:flex-end;padding:10px;
   background:var(--pbg);background-size:cover;background-position:center}
 .chip{font-family:'Coming Soon',cursive;font-size:13px;color:var(--ink);background:var(--tc,#999);
   padding:4px 12px;border-radius:999px;box-shadow:0 2px 8px -2px rgba(0,0,0,.25);position:relative;z-index:1}
@@ -236,16 +238,17 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 const DATA = {
   copy:{
     wordmark:"Loci", tagline:"a lens for wondering",
-    pitch:"A child explores a big question alone with a small camera. It catches their thinking as pictures and voice notes. <b>Each wondering then travels to a parent, who picks the conversation up at home.</b> Here you can watch one arrive.",
+    pitch:"A child explores a big question alone with a small camera, and their wonderings travel home to a parent. <b>This wall is yours: wonderings caught by visitors, on their own phones, right here.</b> Scan the card below to send one.",
     legendLead:"five big questions:",
-    wallLabel:"recent wonderings",
+    wallLabel:"wonderings from this exhibition",
     arriveCta:"✳ watch one arrive",
-    yoursTitle:"the sixth wondering is yours",
+    yoursTitle:"the next wondering is yours",
     yoursSub:"scan it — borrow the lens and send one to this wall",
     revealEyebrow:"a wondering arriving…",
+    revisitEyebrow:"a wondering from the wall",
     revealPlabel:"the lens asked",
-    revealFoot:"In real life a wondering reaches the parent's phone hours after the child captures it. Here, things are sped up.",
-    inviteText:"It's just landed with the parent. <b>What happens next is their part: finding the questions.</b> Want to try?",
+    revealFoot:"In the real Loci, a child's wonderings reach a parent's phone hours later. Here, yours reaches the wall in seconds.",
+    inviteText:"Catching it was half the job. <b>The other half is the parent's: finding the questions that open it up.</b> Want to try?",
     inviteGo:"find the questions →", invitePass:"just watching",
     composerAsk:"What would you ask them? (in your own words)",
     composerAskNext:"And if that opened something up… what might you ask next?",
@@ -265,7 +268,10 @@ const DATA = {
   },
 
   config:{ holdBeforeInvite:4.5, autoArriveEvery:50, idleResetSeconds:120, inviteTimeoutSeconds:20,
-           maxWallCards:9, sixthSlot:"yours" /* "yours" | "centered" */, nudgeAfterSeconds:14, questionsBeforeLanding:2 },
+           nudgeAfterSeconds:14, questionsBeforeLanding:2,
+           pageSize:18 /* wonders fetched per scroll page */,
+           driftSpeed:.4 /* ambient auto-scroll px/frame; 0 = off */,
+           driftAfterSeconds:6 /* idle touch time before drift resumes */ },
 
   topics:{ /* real zine palette - single source of truth; slugs match the server */
     "Lying":{color:"#B7F193",slug:"lying"},
@@ -363,16 +369,37 @@ function classify(q){
   return 'open';  // unrecognised but question-shaped: benefit of the doubt
 }
 
-/* ========================= attract ========================= */
+/* ========================= the wall (visitor wonderings) =========================
+   Items come from /api/wonders (newest first). The wall scrolls: older pages
+   load as you near the bottom; when the feed runs out it loops seamlessly by
+   appending two clone batches and jumping back one batch-height. A gentle
+   drift auto-scrolls when nobody is touching. Tap any card to re-reveal it. */
 const C=DATA.copy;
-function cardHTML(c,fresh){
-  const p=palette(c.topic);
-  return `<div class="cardw" data-topic="${c.topic}" style="--tc:${p.base};--tcglow:${p.glow};--pbg:${photoBG(c,p)}">
-    <div class="photo"><span class="chip" style="background:${p.base}">${c.topic}</span>${photoNote(c)}</div>
-    <div class="body"><div class="prompt">“${c.prompt}”</div><div class="resp">${c.response}</div></div></div>`;
+const REPLAY=/[?&]replay=1/.test(location.search);
+let wallItems=[];               // newest first
+const itemById={};
+let oldestLoaded=null,serverHasMore=false,loadingMore=false;
+let clonesAppended=0,cloneUnitH=0,landPending=null;
+
+function normWonder(w){
+  return {id:w.id, topic:SLUG2TOPIC[w.topic]||"Reality", prompt:w.prompt||"…",
+          response:w.response||"", photoUrl:w.photoUrl, created:w.created_at};
+}
+/* wall never empty: before the first visitor sends one, the demo captures hold it */
+function demoItems(){
+  return DATA.captures.map((c,i)=>({id:'demo-'+i, topic:c.topic, prompt:c.prompt,
+          response:c.response, photoLabel:c.photoLabel}));
+}
+function registerItems(list){list.forEach(it=>{itemById[it.id]=it;});}
+function cardHTML(it,fresh){
+  const p=palette(it.topic);
+  return `<div class="cardw${fresh?' fresh':''}" data-wid="${it.id}" onclick="tapCard('${it.id}')"
+    style="--tc:${p.base};--tcglow:${p.glow};--pbg:${photoBG(it,p)}">
+    <div class="photo"><span class="chip" style="background:${p.base}">${it.topic}</span>${photoNote(it)}</div>
+    <div class="body"><div class="prompt">“${it.prompt}”</div><div class="resp">${it.response}</div></div></div>`;
 }
 function openSlotHTML(){
-  return `<div class="cardw open-slot">
+  return `<div class="cardw open-slot" style="animation:none">
     <div class="t1">${C.yoursTitle}</div>
     <img class="qr" src="/exhibit/qr.svg?device=${encodeURIComponent(DEVICE)}" alt=""
       onerror="this.remove()">
@@ -387,30 +414,115 @@ function renderAttract(){
       <button class="arrive-cta" onclick="arriveNext()">${C.arriveCta}</button></div>
     <div style="min-height:0;display:grid;grid-template-rows:auto 1fr">
       <div class="wall-label"><span>${C.wallLabel}</span></div>
-      <div class="wall${DATA.config.sixthSlot==='centered'?' centered':''}" id="wall">${DATA.captures.map(c=>cardHTML(c,false)).join('')}${DATA.config.sixthSlot==='yours'?openSlotHTML():''}</div></div>`;
+      <div class="wallwrap" id="wallwrap"><div class="wall" id="wall"></div></div></div>`;
+  $('wallwrap').addEventListener('scroll',onWallScroll,{passive:true});
+  setInterval(onWallScroll,1000);  /* belt & braces: never rely on scroll events alone */
 }
 renderAttract();
 
+async function initWall(){
+  try{
+    const r=await fetch(`/api/wonders/${encodeURIComponent(DEVICE)}?order=desc&limit=${DATA.config.pageSize}`,{cache:'no-store'});
+    if(r.ok){
+      const list=(await r.json()).map(normWonder);
+      if(list.length){
+        wallItems=list;
+        serverHasMore=list.length===DATA.config.pageSize;
+        oldestLoaded=list[list.length-1].created;
+        if(!REPLAY){list.forEach(w=>seenWonders.add(w.id));wondersPrimed=true;}
+      }
+    }
+  }catch(e){/* offline: demo wall below */}
+  if(!wallItems.length) wallItems=demoItems();
+  registerItems(wallItems);
+  $('wall').innerHTML=openSlotHTML()+wallItems.map(it=>cardHTML(it)).join('');
+  fillViewport();
+}
+initWall();
+
+async function fillViewport(){ /* small feeds must still overflow, so drift can loop */
+  const ww=$('wallwrap');
+  for(let i=0;i<4&&ww.scrollHeight<=ww.clientHeight+cloneUnitH+40;i++) await loadMore();
+}
+function onWallScroll(){
+  const ww=$('wallwrap');
+  if(ww.scrollTop+ww.clientHeight>ww.scrollHeight-320) loadMore();
+  if(clonesAppended>=2&&cloneUnitH>0){
+    const baseH=ww.scrollHeight-2*cloneUnitH;   /* identical batches: jumping */
+    if(ww.scrollTop>baseH+cloneUnitH) ww.scrollTop-=cloneUnitH;  /* is seamless */
+  }
+}
+async function loadMore(){
+  if(loadingMore)return;loadingMore=true;
+  try{
+    if(serverHasMore){
+      const r=await fetch(`/api/wonders/${encodeURIComponent(DEVICE)}?order=desc&limit=${DATA.config.pageSize}&before=${oldestLoaded}`,{cache:'no-store'});
+      if(r.ok){
+        const list=(await r.json()).map(normWonder);
+        serverHasMore=list.length===DATA.config.pageSize;
+        if(list.length){
+          oldestLoaded=list[list.length-1].created;
+          list.forEach(w=>seenWonders.add(w.id));
+          wallItems=wallItems.concat(list);registerItems(list);
+          $('wall').insertAdjacentHTML('beforeend',list.map(it=>cardHTML(it)).join(''));
+          loadingMore=false;return;
+        }
+      }
+    }
+    /* feed exhausted: loop the wall (two clone batches, then jump in onWallScroll) */
+    if(clonesAppended<2){
+      const ww=$('wallwrap'),before=ww.scrollHeight;
+      $('wall').insertAdjacentHTML('beforeend',openSlotHTML()+wallItems.map(it=>cardHTML(it)).join(''));
+      if(clonesAppended===0)cloneUnitH=ww.scrollHeight-before;
+      clonesAppended++;
+    }
+  }catch(e){serverHasMore=false;}
+  loadingMore=false;
+}
+
+/* gentle ambient drift when nobody is touching (?drift=N tunes it on-site) */
+const driftParam=new URLSearchParams(location.search).get('drift');
+if(driftParam!==null)DATA.config.driftSpeed=parseFloat(driftParam)||0;
+let lastTouch=0,driftAcc=0;
+['pointerdown','wheel','touchstart'].forEach(ev=>
+  document.addEventListener(ev,()=>lastTouch=Date.now(),{passive:true}));
+if(DATA.config.driftSpeed>0)(function drift(){
+  const ww=$('wallwrap');
+  if(ww&&!busy&&Date.now()-lastTouch>DATA.config.driftAfterSeconds*1000){
+    driftAcc+=DATA.config.driftSpeed;
+    if(driftAcc>=1){ww.scrollTop+=Math.floor(driftAcc);driftAcc-=Math.floor(driftAcc);}
+  }
+  requestAnimationFrame(drift);
+})();
+
 /* ========================= arrival ========================= */
-let sessIdx=0,current=null,busy=false,inviteTimer=null;
+let current=null,busy=false,inviteTimer=null;
 function setTopicVars(el,p){
   el.style.setProperty('--tc',p.base);el.style.setProperty('--tcdeep',p.deep);
   el.style.setProperty('--tcglow',p.glow);el.style.setProperty('--tcshadow',p.shadow);
   el.style.setProperty('--tctint',p.bubtint);
   el.style.setProperty('--rvbg',`radial-gradient(120% 120% at 50% 40%, ${p.tint} 0%, ${p.tint2} 100%)`);
 }
+function tapCard(id){
+  if(busy)return;
+  const it=itemById[id];
+  if(it)arriveItem(it,true);
+}
+function arriveItem(it,revisit){
+  arrive({...it,said:it.response?`“${it.response}”`:""},revisit);
+}
 function arriveNext(){
   if(busy)return;
   if(wonderQueue.length){arriveWonder(wonderQueue.shift());return;}
-  arrive(DATA.session[sessIdx++ % DATA.session.length]);
+  if(wallItems.length)arriveItem(wallItems[Math.floor(Math.random()*wallItems.length)],true);
 }
-function arrive(c){
+function arrive(c,revisit){
   busy=true;current=c;
   clearTimeout(inviteTimer);
   const p=palette(c.topic);
   const rv=$('reveal');setTopicVars(rv,p);
   rv.innerHTML=`
-    <div class="reveal-eyebrow"><span class="pulse"></span>${C.revealEyebrow}</div>
+    <div class="reveal-eyebrow"><span class="pulse"></span>${revisit?C.revisitEyebrow:C.revealEyebrow}</div>
     <div class="reveal-photo" style="--pbg:${photoBG(c,p)}">${photoNote(c)}<span class="chip" style="background:${p.base}">${c.topic}</span></div>
     <div class="reveal-side">
       <div class="reveal-plabel">${C.revealPlabel}</div>
@@ -436,17 +548,21 @@ function settle(){
   clearTimeout(inviteTimer);
   $('reveal').classList.remove('on');$('discuss').classList.remove('on');$('keysScreen').classList.remove('on');
   $('attract').style.opacity='1';$('attract').style.filter='none';
-  /* the wall is STATIC: nothing is created or deleted. The arriving
-     wondering's existing home tile glows once, as if waking up. */
-  if(current){
-    const tile=document.querySelector(`.cardw[data-topic="${CSS.escape(current.topic)}"]`);
+  if(landPending){ /* a brand-new wondering lands as the freshest card, up top */
+    wallItems.unshift(landPending);itemById[landPending.id]=landPending;
+    const wall=$('wall');
+    wall.children[0].insertAdjacentHTML('afterend',cardHTML(landPending,true));
+    $('wallwrap').scrollTo({top:0,behavior:'smooth'});
+    landPending=null;
+  }else if(current&&current.id){ /* a revisited one glows in place */
+    const tile=document.querySelector(`.cardw[data-wid="${CSS.escape(current.id)}"]`);
     if(tile){
       tile.classList.remove('homeglow');void tile.offsetWidth;
       tile.classList.add('homeglow');
       setTimeout(()=>tile.classList.remove('homeglow'),2600);
     }
-    current=null;
   }
+  current=null;
   setTimeout(()=>busy=false,700);
 }
 
@@ -587,8 +703,9 @@ async function pollWonders(){
   }catch(e){/* show wi-fi being show wi-fi - attract state persists */}
 }
 function arriveWonder(w){
-  arrive({topic:SLUG2TOPIC[w.topic]||"Reality",prompt:w.prompt||"…",
-          said:w.response?`“${w.response}”`:"", photoUrl:w.photoUrl});
+  const it=normWonder(w);
+  if(!itemById[it.id])landPending=it;   /* settle() lands it at the top */
+  arriveItem(it,false);
 }
 setInterval(pollWonders,4000);pollWonders();
 setInterval(()=>{ if(!busy&&wonderQueue.length) arriveNext(); },1500);
@@ -599,7 +716,10 @@ setInterval(()=>{ if(lastPollOk&&Date.now()-lastPollOk>300000) location.reload()
 setInterval(()=>{ if(!busy) arriveNext(); }, DATA.config.autoArriveEvery*1000);
 let idleT;
 function armIdle(){clearTimeout(idleT);
-  idleT=setTimeout(()=>{ if($('discuss').classList.contains('on')||$('keysScreen').classList.contains('on')||$('reveal').classList.contains('on')) settle(); },
+  idleT=setTimeout(()=>{
+    if($('discuss').classList.contains('on')||$('keysScreen').classList.contains('on')||$('reveal').classList.contains('on')) settle();
+    const ww=$('wallwrap'); if(ww)ww.scrollTo({top:0,behavior:'smooth'});
+  },
   DATA.config.idleResetSeconds*1000);}
 ['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,armIdle));armIdle();
 document.addEventListener('contextmenu',e=>e.preventDefault());
