@@ -60,7 +60,8 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 .wall{display:grid;grid-template-columns:repeat(3,1fr);gap:1.9vmin}
 .cardw{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--tc,#bbb);
   border-radius:18px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;
-  animation:breathe 7s ease-in-out infinite}
+  animation:breathe 7s ease-in-out infinite;transition:opacity .12s ease}
+.cardw:active{opacity:.7}
 @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .cardw .photo{aspect-ratio:4/3;position:relative;display:flex;align-items:flex-end;padding:10px;
   background:var(--pbg);background-size:cover;background-position:center}
@@ -379,7 +380,7 @@ const C=DATA.copy;
 const REPLAY=/[?&]replay=1/.test(location.search);
 let wallItems=[];               // newest first
 const itemById={};
-let oldestLoaded=null,serverHasMore=false,loadingMore=false,landPending=null;
+let oldestLoaded=null,serverHasMore=false,loadingMore=false;
 
 function normWonder(w){
   return {id:w.id, topic:SLUG2TOPIC[w.topic]||"Reality", prompt:w.prompt||"…",
@@ -416,14 +417,18 @@ function renderAttract(){
       <div class="wallwrap" id="wallwrap"><div class="wall" id="wall"></div></div></div>`;
   $('wallwrap').addEventListener('scroll',onWallScroll,{passive:true});
   setInterval(onWallScroll,1000);  /* belt & braces: never rely on scroll events alone */
-  /* delegated tap - survives any re-render, no inline handlers */
-  $('wall').addEventListener('click',e=>{
-    const card=e.target.closest('.cardw');
-    if(!card||card.classList.contains('open-slot'))return;
-    tapCard(card.dataset.wid);
-  });
 }
 renderAttract();
+
+/* delegated tap at document level - survives any re-render, works for both
+   mouse click and touch tap */
+document.addEventListener('click',e=>{
+  const card=e.target.closest('#wall .cardw');
+  if(!card||card.classList.contains('open-slot'))return;
+  tapCard(card.dataset.wid);
+});
+const BUILD='exhibit2-2026-07-09c';
+console.log('[loci]',BUILD);
 
 async function initWall(){
   let loaded=false;
@@ -504,15 +509,25 @@ function setTopicVars(el,p){
   el.style.setProperty('--tctint',p.bubtint);
   el.style.setProperty('--rvbg',`radial-gradient(120% 120% at 50% 40%, ${p.tint} 0%, ${p.tint2} 100%)`);
 }
-function tapCard(id){
-  if(busy)return;
-  const it=itemById[id];
-  if(!it)return;
-  /* a tapped tile goes straight to the question-construction interaction */
+/* straight to the question-construction interaction for an item */
+function openDiscussFor(it){
   busy=true;
+  clearTimeout(inviteTimer);
   current={...it,said:it.response?`“${it.response}”`:""};
   $('attract').style.opacity='.22';$('attract').style.filter='blur(3px)';
   startDiscuss();
+}
+function tapCard(id){
+  if(busy)return;
+  const it=itemById[id];
+  if(it)openDiscussFor(it);
+}
+/* a freshly taken wondering: land its tile at the top NOW */
+function landItem(it){
+  if(itemById[it.id])return;
+  wallItems.unshift(it);itemById[it.id]=it;
+  $('wall').children[0].insertAdjacentHTML('afterend',cardHTML(it,true));
+  $('wallwrap').scrollTo({top:0,behavior:'smooth'});
 }
 function arriveItem(it,revisit){
   arrive({...it,said:it.response?`“${it.response}”`:""},revisit);
@@ -554,15 +569,7 @@ function settle(){
   clearTimeout(inviteTimer);
   $('reveal').classList.remove('on');$('discuss').classList.remove('on');$('keysScreen').classList.remove('on');
   $('attract').style.opacity='1';$('attract').style.filter='none';
-  if(landPending&&!document.querySelector(`.cardw[data-wid="${CSS.escape(landPending.id)}"]`)){
-    /* a brand-new wondering lands as the freshest card, up top - exactly once */
-    wallItems.unshift(landPending);itemById[landPending.id]=landPending;
-    const wall=$('wall');
-    wall.children[0].insertAdjacentHTML('afterend',cardHTML(landPending,true));
-    $('wallwrap').scrollTo({top:0,behavior:'smooth'});
-    landPending=null;
-  }else if(current&&current.id){ /* a revisited one glows in place */
-    landPending=null;
+  if(current&&current.id){ /* its tile glows in place as the overlay closes */
     const tile=document.querySelector(`.cardw[data-wid="${CSS.escape(current.id)}"]`);
     if(tile){
       tile.classList.remove('homeglow');void tile.offsetWidth;
@@ -711,9 +718,11 @@ async function pollWonders(){
   }catch(e){/* show wi-fi being show wi-fi - attract state persists */}
 }
 function arriveWonder(w){
+  /* a picture was just taken: tile lands on the wall immediately, then the
+     question-creation screen opens with it */
   const it=normWonder(w);
-  if(!itemById[it.id])landPending=it;   /* settle() lands it at the top */
-  arriveItem(it,false);
+  landItem(it);
+  openDiscussFor(it);
 }
 setInterval(pollWonders,4000);pollWonders();
 setInterval(()=>{ if(!busy&&wonderQueue.length) arriveNext(); },1500);
