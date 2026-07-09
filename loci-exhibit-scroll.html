@@ -268,7 +268,7 @@ const DATA = {
     starters:["Tell me more about…","What would be the opposite of…","Does this remind you of…","Where else have you seen…","Walk me through…"],
   },
 
-  config:{ holdBeforeInvite:4.5, autoArriveEvery:50, idleResetSeconds:120, inviteTimeoutSeconds:20,
+  config:{ holdBeforeInvite:4.5, autoArriveEvery:180, idleResetSeconds:120, inviteTimeoutSeconds:40,
            nudgeAfterSeconds:14, questionsBeforeLanding:2,
            pageSize:18 /* wonders fetched per scroll page */,
            driftSpeed:.4 /* ambient auto-scroll px/frame; 0 = off */,
@@ -429,7 +429,7 @@ document.addEventListener('click',e=>{
   if(!card||card.classList.contains('open-slot'))return;
   tapCard(card.dataset.wid);
 });
-const BUILD='exhibit2-2026-07-09d';
+const BUILD='exhibit2-2026-07-09e';
 console.log('[loci]',BUILD);
 
 async function initWall(){
@@ -721,10 +721,10 @@ async function pollWonders(){
 }
 function arriveWonder(w){
   /* a picture was just taken: tile lands on the wall immediately, then the
-     question-creation screen opens with it */
+     arrival reveal offers the choice - find the questions, or just watch */
   const it=normWonder(w);
   landItem(it);
-  openDiscussFor(it);
+  arriveItem(it,false);
 }
 setInterval(pollWonders,4000);pollWonders();
 setInterval(()=>{ if(!busy&&wonderQueue.length) arriveNext(); },1500);
