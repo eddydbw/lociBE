@@ -349,7 +349,9 @@ function photoNote(c){
 }
 const $=id=>document.getElementById(id);
 function wc(s){return s.split(/\s+/).filter(Boolean).length;}
-const DEVICE=(location.pathname.match(/\/exhibit\/([^\/]+)/)||[])[1]||'demo';
+const DEVICE=(location.pathname.match(/\/exhibit2\/([^\/]+)/)||[])[1]||'demo';
+/* overlay state - declared before anything that can run at load time */
+let current=null,busy=false,inviteTimer=null;
 const SLUG2TOPIC=Object.fromEntries(Object.entries(DATA.topics).map(([n,t])=>[t.slug,n]));
 
 /* ========================= THE CLASSIFIER =========================
@@ -427,7 +429,7 @@ document.addEventListener('click',e=>{
   if(!card||card.classList.contains('open-slot'))return;
   tapCard(card.dataset.wid);
 });
-const BUILD='exhibit2-2026-07-09c';
+const BUILD='exhibit2-2026-07-09d';
 console.log('[loci]',BUILD);
 
 async function initWall(){
@@ -482,7 +484,8 @@ if(driftParam!==null)DATA.config.driftSpeed=parseFloat(driftParam)||0;
 let lastTouch=0,driftAcc=0,bottomAt=0;
 ['pointerdown','wheel','touchstart'].forEach(ev=>
   document.addEventListener(ev,()=>lastTouch=Date.now(),{passive:true}));
-if(DATA.config.driftSpeed>0)(function drift(){
+/* first frame deferred: never touch page state during script evaluation */
+if(DATA.config.driftSpeed>0)requestAnimationFrame(function drift(){
   const ww=$('wallwrap');
   if(ww&&!busy&&Date.now()-lastTouch>DATA.config.driftAfterSeconds*1000){
     const atEnd=ww.scrollTop+ww.clientHeight>=ww.scrollHeight-2;
@@ -499,10 +502,9 @@ if(DATA.config.driftSpeed>0)(function drift(){
     }
   }
   requestAnimationFrame(drift);
-})();
+});
 
 /* ========================= arrival ========================= */
-let current=null,busy=false,inviteTimer=null;
 function setTopicVars(el,p){
   el.style.setProperty('--tc',p.base);el.style.setProperty('--tcdeep',p.deep);
   el.style.setProperty('--tcglow',p.glow);el.style.setProperty('--tcshadow',p.shadow);
