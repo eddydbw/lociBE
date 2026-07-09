@@ -410,8 +410,7 @@ function renderAttract(){
     <div><div class="masthead"><div class="wordmark">${C.wordmark}</div><div class="tagline">${C.tagline}</div></div>
     <div class="pitch">${C.pitch}</div></div>
     <div class="legendrow"><span class="lead">${C.legendLead}</span>
-      ${Object.entries(DATA.topics).map(([n,t])=>`<span class="key-dot"><i style="background:${t.color}"></i>${n}</span>`).join('')}
-      <button class="arrive-cta" onclick="arriveNext()">${C.arriveCta}</button></div>
+      ${Object.entries(DATA.topics).map(([n,t])=>`<span class="key-dot"><i style="background:${t.color}"></i>${n}</span>`).join('')}</div>
     <div style="min-height:0;display:grid;grid-template-rows:auto 1fr">
       <div class="wall-label"><span>${C.wallLabel}</span></div>
       <div class="wallwrap" id="wallwrap"><div class="wall" id="wall"></div></div></div>`;
@@ -421,29 +420,29 @@ function renderAttract(){
 renderAttract();
 
 async function initWall(){
-  try{
-    const r=await fetch(`/api/wonders/${encodeURIComponent(DEVICE)}?order=desc&limit=${DATA.config.pageSize}`,{cache:'no-store'});
-    if(r.ok){
-      const list=(await r.json()).map(normWonder);
-      if(list.length){
-        wallItems=list;
-        serverHasMore=list.length===DATA.config.pageSize;
-        oldestLoaded=list[list.length-1].created;
-        if(!REPLAY){list.forEach(w=>seenWonders.add(w.id));wondersPrimed=true;}
+  let loaded=false;
+  for(let attempt=0;attempt<3&&!loaded;attempt++){   /* first load must not lose the wall */
+    try{
+      const r=await fetch(`/api/wonders/${encodeURIComponent(DEVICE)}?order=desc&limit=${DATA.config.pageSize}`,{cache:'no-store'});
+      if(r.ok){
+        const list=(await r.json()).map(normWonder);
+        loaded=true;
+        if(list.length){
+          wallItems=list;
+          serverHasMore=list.length===DATA.config.pageSize;
+          oldestLoaded=list[list.length-1].created;
+          if(!REPLAY){list.forEach(w=>seenWonders.add(w.id));wondersPrimed=true;}
+        }
       }
-    }
-  }catch(e){/* offline: demo wall below */}
+    }catch(e){/* retry below */}
+    if(!loaded)await new Promise(res=>setTimeout(res,2500));
+  }
   if(!wallItems.length) wallItems=demoItems();
   registerItems(wallItems);
   $('wall').innerHTML=openSlotHTML()+wallItems.map(it=>cardHTML(it)).join('');
-  fillViewport();
 }
 initWall();
 
-async function fillViewport(){ /* small feeds must still overflow, so drift can loop */
-  const ww=$('wallwrap');
-  for(let i=0;i<4&&ww.scrollHeight<=ww.clientHeight+cloneUnitH+40;i++) await loadMore();
-}
 function onWallScroll(){
   const ww=$('wallwrap');
   if(ww.scrollTop+ww.clientHeight>ww.scrollHeight-320) loadMore();
@@ -469,10 +468,13 @@ async function loadMore(){
         }
       }
     }
-    /* feed exhausted: loop the wall (two clone batches, then jump in onWallScroll) */
-    if(clonesAppended<2){
-      const ww=$('wallwrap'),before=ww.scrollHeight;
-      $('wall').insertAdjacentHTML('beforeend',openSlotHTML()+wallItems.map(it=>cardHTML(it)).join(''));
+    /* feed exhausted: loop the wall (two clone batches, then jump in
+       onWallScroll) - but only when it genuinely overflows the screen,
+       so a small feed never shows duplicates. QR stays at the top only. */
+    const ww=$('wallwrap');
+    if(clonesAppended<2&&ww.scrollHeight>ww.clientHeight*1.3){
+      const before=ww.scrollHeight;
+      $('wall').insertAdjacentHTML('beforeend',wallItems.map(it=>cardHTML(it)).join(''));
       if(clonesAppended===0)cloneUnitH=ww.scrollHeight-before;
       clonesAppended++;
     }
@@ -506,7 +508,12 @@ function setTopicVars(el,p){
 function tapCard(id){
   if(busy)return;
   const it=itemById[id];
-  if(it)arriveItem(it,true);
+  if(!it)return;
+  /* a tapped tile goes straight to the question-construction interaction */
+  busy=true;
+  current={...it,said:it.response?`“${it.response}”`:""};
+  $('attract').style.opacity='.22';$('attract').style.filter='blur(3px)';
+  startDiscuss();
 }
 function arriveItem(it,revisit){
   arrive({...it,said:it.response?`“${it.response}”`:""},revisit);
@@ -711,6 +718,11 @@ setInterval(pollWonders,4000);pollWonders();
 setInterval(()=>{ if(!busy&&wonderQueue.length) arriveNext(); },1500);
 /* watchdog: if polling once worked but has been dead >5min, reload */
 setInterval(()=>{ if(lastPollOk&&Date.now()-lastPollOk>300000) location.reload(); },60000);
+/* self-heal: busy must never stay true with every overlay closed */
+setInterval(()=>{
+  if(busy&&!$('reveal').classList.contains('on')&&!$('discuss').classList.contains('on')&&!$('keysScreen').classList.contains('on'))
+    busy=false;
+},8000);
 
 /* ========================= exhibition housekeeping ========================= */
 setInterval(()=>{ if(!busy) arriveNext(); }, DATA.config.autoArriveEvery*1000);
