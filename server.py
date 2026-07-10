@@ -217,7 +217,7 @@ DEMO_SCRIPT = {
                 ],
             },
             {
-                'title': 'Is It Art?',
+                'title': 'Is it art?',
                 'topic': 'art',
                 'dot': '#BFE5D2',
                 'nodes': [
@@ -244,7 +244,7 @@ DEMO_SCRIPT = {
                 ],
             },
             {
-                'title': 'Beautiful',
+                'title': 'Where is beauty?',
                 'topic': 'beauty',
                 'dot': '#FADFC7',
                 'nodes': [
@@ -271,7 +271,7 @@ DEMO_SCRIPT = {
                 ],
             },
             {
-                'title': 'What Is Real?',
+                'title': 'What is Real?',
                 'topic': 'real',
                 'dot': '#C7DEF3',
                 'nodes': [
