@@ -3,6 +3,7 @@ Loci Lens backend — production-ready
 """
 
 import os
+import hmac
 import uuid
 import time
 import struct
@@ -26,6 +27,40 @@ for d in [PHOTOS_DIR, AUDIO_DIR]:
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
+
+# ---------------------------------------------------------------------------
+# Access control: visitors scanning the QR only ever need the wonder page,
+# the exhibit2 wall, and the assets/APIs those two use. Everything else
+# (viewer, admin, parent, exhibit v1, debug/reset APIs) asks for a password.
+# Set EXHIBIT_PASSWORD in the deployment env; any username is accepted.
+# Staff browsers remember the credentials after the first prompt.
+# ---------------------------------------------------------------------------
+EXHIBIT_PASSWORD = os.environ.get("EXHIBIT_PASSWORD", "loci-staff")
+
+PUBLIC_PREFIXES = (
+    "/wonder",           # visitor phone page
+    "/exhibit2",         # visitors' wall tablet page + its manifest
+    "/api/wonders",      # wonder POST + exhibit2 feed
+    "/uploads/photos",   # photos shown on the wall
+    "/exhibit/qr.svg",   # QR card image embedded in exhibit2
+    "/static",           # icons + self-hosted fonts
+    "/favicon.ico",      # browsers ask; never worth an auth prompt
+)
+
+def _public(path):
+    return any(path == p or path.startswith(p + "/") or
+               (p.endswith((".svg", ".ico")) and path == p)
+               for p in PUBLIC_PREFIXES)
+
+@app.before_request
+def require_staff_password():
+    if _public(request.path):
+        return None
+    auth = request.authorization
+    if auth and auth.password and hmac.compare_digest(auth.password, EXHIBIT_PASSWORD):
+        return None
+    return Response("Loci — staff only.", 401,
+                    {"WWW-Authenticate": 'Basic realm="Loci staff"'})
 
 def get_db():
     conn = sqlite3.connect(str(DB_PATH))
