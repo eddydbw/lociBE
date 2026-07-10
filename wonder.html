@@ -111,32 +111,25 @@ const DATA = {
     {name:"Reality",            slug:"real",           color:"#DE93F1"},
   ],
 
-  /* camera prompts per topic, in the lens's voice */
+  /* camera prompts per topic, in the lens's voice.
+     KEYS ARE THE SLUGS above, not the display names - the code looks
+     prompts up by topic.slug. One question per topic keeps it simple;
+     add more strings to a list and "ask me another" reappears. */
   prompts:{
     "lying":[
-      "Find something pretending to be something else",
-      "Find a place where a lie could hide",
-      "Find something that looks more honest than it is",
+      "Find something that lies",
     ],
     "invisible-ring":[
-      "Find a place you'd sneak to if nobody could see you",
-      "Find something only you ever seem to notice",
-      "Find where you'd wait if you were invisible",
+      "Find a place where the most rules live",
     ],
     "beauty":[
-      "Find something beautiful that you can't carry",
-      "Find something beautiful nobody else stopped for",
-      "Find something a little bit broken and still beautiful",
+      "Take the most beautiful photo you can without moving around",
     ],
     "art":[
-      "Find something that might secretly be art",
-      "Find something someone put there on purpose",
       "Find an accident that looks like it was made",
     ],
     "real":[
       "Find something real that you can't touch",
-      "Find something that's only real sometimes",
-      "Find the realest thing you can see from here",
     ],
   },
 };
@@ -166,7 +159,7 @@ function render(){
       <div class="promptcard" id="pcard">
         <div class="lens-asks">${C.lensAsks}</div>
         <div class="prompt" id="ptext"></div>
-        <button class="reroll" onclick="reroll()">${C.reroll}</button>
+        <button class="reroll" id="rerollBtn" onclick="reroll()">${C.reroll}</button>
         <button class="btn-camera" onclick="$('file').click()">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="4"/><path d="M9 7l1.2-2.4h3.6L15 7"/></svg>
           ${C.openCamera}</button>
@@ -197,6 +190,8 @@ function pickTopic(i){
   card.style.setProperty('--tctint',tint);
   card.style.setProperty('--tcdeep',deep);
   reroll();
+  /* one question per topic: no point offering another */
+  $('rerollBtn').style.display=DATA.prompts[t.slug].length>1?'':'none';
   $('step2').classList.remove('hidden');
   $('step2').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
