@@ -4,6 +4,7 @@ Loci Lens backend — production-ready
 
 import os
 import hmac
+import json
 import uuid
 import time
 import struct
@@ -189,7 +190,7 @@ DEMO_SCRIPT = {
                 ],
             },
             {
-                'title': 'The Invisible Ring',
+                'title': 'Why be good?',
                 'topic': 'invisible-ring',
                 'dot': '#D8CDF1',
                 'nodes': [
@@ -752,6 +753,90 @@ def parent_data(device_id):
 
     return jsonify({"topic": script["topic"], "child": script["child"],
                     "routes": out_routes, "captures": caps_out})
+
+
+# ---------------------------------------------------------------------------
+# Exhibit 2 wall reset (staff only - lives under /admin + /api/admin so the
+# password gate covers it; /exhibit2 and /api/wonders are public).
+# Default archives everything (photos moved to uploads/archive/<device>-<ts>/
+# plus a wonders.json of the text) before clearing; ?archive=0 deletes.
+# ---------------------------------------------------------------------------
+ARCHIVE_DIR = UPLOAD_DIR / "archive"
+
+@app.route("/api/admin/wonders/reset/<device_id>", methods=["POST"])
+def wonders_reset(device_id):
+    archive = request.args.get("archive", "1") != "0"
+    with get_db() as db:
+        rows = db.execute("SELECT * FROM wonders WHERE device_id=? ORDER BY created_at",
+                          (device_id,)).fetchall()
+        arch_dir = None
+        if archive and rows:
+            arch_dir = ARCHIVE_DIR / f"{device_id}-{time.strftime('%Y%m%d-%H%M%S')}"
+            arch_dir.mkdir(parents=True, exist_ok=True)
+            meta = []
+            for r in rows:
+                d = dict(r)
+                p = Path(r["photo_path"]) if r["photo_path"] else None
+                if p and p.exists():
+                    p.rename(arch_dir / p.name)
+                    d["photo_path"] = str(arch_dir / p.name)
+                meta.append(d)
+            (arch_dir / "wonders.json").write_text(
+                json.dumps(meta, indent=1, ensure_ascii=False), encoding="utf-8")
+        else:
+            for r in rows:
+                if r["photo_path"]:
+                    try:
+                        Path(r["photo_path"]).unlink(missing_ok=True)
+                    except Exception:
+                        pass
+        db.execute("DELETE FROM wonders WHERE device_id=?", (device_id,))
+        db.commit()
+    print(f"[wonders-reset] {device_id}  cleared={len(rows)}  archive={arch_dir}")
+    return jsonify({"ok": True, "cleared": len(rows),
+                    "archived_to": str(arch_dir) if arch_dir else None})
+
+ADMIN2_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loci — exhibit 2 admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Mansalva&family=Coming+Soon&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Outfit',sans-serif;background:#FFFDF4;color:#2A2620;margin:0;padding:28px}
+.box{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:'Mansalva',cursive;font-size:34px;margin:0}
+p{color:#7A7466;line-height:1.45;margin:0}
+label{font-family:'Coming Soon',cursive;color:#7A7466;font-size:15px}
+input{font-family:'Outfit',sans-serif;font-size:18px;padding:12px 14px;border:1.5px solid #E9E3D2;
+  border-radius:12px;background:#FFFEFB;width:100%;box-sizing:border-box}
+button{font-family:'Outfit',sans-serif;font-weight:600;font-size:17px;padding:14px 18px;
+  border-radius:999px;border:none;cursor:pointer}
+.arch{background:#F3B13C}.del{background:none;border:1.5px solid #E8806B;color:#B0563F}
+pre{background:#FFFEFB;border:1px solid #E9E3D2;border-radius:12px;padding:14px;
+  white-space:pre-wrap;word-break:break-all;font-size:13px;min-height:20px}
+</style></head><body><div class="box">
+<h1>exhibit 2 — the wall</h1>
+<p>Clears every visitor wondering for a device. <b>Archive</b> moves the photos and
+a JSON of their words into <code>uploads/archive/</code> first; <b>delete</b> removes them for good.</p>
+<label>device id</label><input id="dev" value="demo">
+<button class="arch" onclick="go(true)">archive &amp; clear the wall</button>
+<button class="del" onclick="go(false)">delete forever (no archive)</button>
+<pre id="out"></pre>
+<script>
+async function go(archive){
+  const dev=document.getElementById('dev').value.trim()||'demo';
+  const n=archive?'archive and clear':'PERMANENTLY DELETE';
+  if(!confirm(`Really ${n} all wonderings for "${dev}"?`))return;
+  const out=document.getElementById('out');out.textContent='working…';
+  try{
+    const r=await fetch(`/api/admin/wonders/reset/${encodeURIComponent(dev)}?archive=${archive?1:0}`,{method:'POST'});
+    out.textContent=JSON.stringify(await r.json(),null,1);
+  }catch(e){out.textContent='failed: '+e.message;}
+}
+</script></div></body></html>"""
+
+@app.route("/admin/exhibit2")
+def admin_exhibit2():
+    return ADMIN2_HTML, 200, {"Content-Type": "text/html"}
 
 
 @app.route("/api/demo/reset/<device_id>", methods=["POST"])

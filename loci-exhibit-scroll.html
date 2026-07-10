@@ -280,7 +280,7 @@ const DATA = {
 
   topics:{ /* real zine palette - single source of truth; slugs match the server */
     "Lying":{color:"#B7F193",slug:"lying"},
-    "The Invisible Ring":{color:"#F1DD93",slug:"invisible-ring"},
+    "Why be good?":{color:"#F1DD93",slug:"invisible-ring"},
     "Beautiful":{color:"#78ABFE",slug:"beauty"},
     "Is It Art?":{color:"#F19394",slug:"art"},
     "Reality":{color:"#DE93F1",slug:"real"},
@@ -289,7 +289,7 @@ const DATA = {
   captures:[
     {topic:"Is It Art?", prompt:"Walk me through why you think it counts.", response:"It’s art because someone wanted me to look at it differently.", photoLabel:"something put there on purpose"},
     {topic:"Reality", prompt:"Tell me about something real that you can’t touch.", response:"A song is real but it only exists while it’s happening.", photoLabel:"where the song was playing"},
-    {topic:"The Invisible Ring", prompt:"Walk me through what you’d do if no one could see you.", response:"I’d be good anyway, but it would be harder to choose.", photoLabel:"the garden, with nobody watching"},
+    {topic:"Why be good?", prompt:"Walk me through what you’d do if no one could see you.", response:"I’d be good anyway, but it would be harder to choose.", photoLabel:"the garden, with nobody watching"},
     {topic:"Lying", prompt:"Tell me about a time a small lie felt kind.", response:"Saying you like the present even if you don’t.", photoLabel:"the present, still wrapped"},
     {topic:"Beautiful", prompt:"Tell me what made you stop and look.", response:"It was beautiful because it was a little bit broken.", photoLabel:"the little broken thing"},
   ],
@@ -299,7 +299,7 @@ const DATA = {
     {topic:"Reality", prompt:"Show me something that’s only real sometimes.", said:"“A puddle! It’s completely real today and tomorrow it’s just… gone?”", photoLabel:"a puddle with sky in it"},
     {topic:"Lying", prompt:"Walk me through a lie that would be impossible to tell.", said:"“You can’t lie to a mirror. It already saw you.”", photoLabel:"their own reflection"},
     {topic:"Is It Art?", prompt:"Walk me through the moment something becomes art.", said:"“When you put it somewhere on purpose and then step back.”", photoLabel:"leaves arranged on a wall"},
-    {topic:"The Invisible Ring", prompt:"Tell me who you’d visit if nobody could see you.", said:"“My gran, so I could hear what she says when I’m not there.”", photoLabel:"a front door"},
+    {topic:"Why be good?", prompt:"Tell me who you’d visit if nobody could see you.", said:"“My gran, so I could hear what she says when I’m not there.”", photoLabel:"a front door"},
   ],
 
   /* V2 construct: no simulated child. borrow[] feeds nudge level 3. */
@@ -308,7 +308,7 @@ const DATA = {
     "Reality":{borrow:["Tell me where the puddle goes…","What else is only real sometimes?"]},
     "Lying":{borrow:["Tell me more about the mirror…","Who else would be impossible to lie to?"]},
     "Is It Art?":{borrow:["Tell me about the stepping back…","Does this remind you of anything at home?"]},
-    "The Invisible Ring":{borrow:["Tell me more about gran’s secret voice…","What would the opposite of invisible be?"]},
+    "Why be good?":{borrow:["Tell me more about gran’s secret voice…","What would the opposite of invisible be?"]},
   },
 
   /* notes when a question's FORM closes the door (no child speaks) */
