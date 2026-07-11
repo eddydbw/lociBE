@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Loci — Steps</title>
+<title>Loci Steps</title>
 <link href="https://fonts.googleapis.com/css2?family=Coming+Soon&family=Mansalva&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -76,11 +76,11 @@
 
 <div class="header">
   <h1>Loci</h1>
-  <span class="subtitle" id="subtitle">step editor — <a href="/">view captures</a></span>
+  <span class="subtitle" id="subtitle">step editor · <a href="/">view captures</a></span>
 </div>
 
 <div class="card">
-  <div class="section-label">Step sequence — camera steps take photos, audio steps record voice</div>
+  <div class="section-label">Step sequence: camera steps take photos, audio steps record voice</div>
   <div id="step-list"><div class="status">Loading...</div></div>
   <div class="actions">
     <button class="btn btn-add" onclick="addStep()">+ add step</button>
@@ -90,7 +90,7 @@
 </div>
 
 <p class="hint">
-  Use <code>\n</code> for a line break — the device shows each line separately.<br>
+  Use <code>\n</code> for a line break; the device shows each line separately.<br>
   <strong style="color:var(--orange)">camera</strong> steps take a photo.
   <strong style="color:var(--purple)">audio</strong> steps record voice.<br>
   Drag rows to reorder. Changes take effect next time the lens boots and connects to WiFi.
@@ -102,7 +102,7 @@
   const deviceId  = location.pathname.split('/').filter(Boolean)[1] || 'lens01';
 
   document.getElementById('subtitle').innerHTML =
-    `step editor [${deviceId}] — <a href="/">view captures</a>`;
+    `step editor [${deviceId}] · <a href="/">view captures</a>`;
 
   async function load() {
     try {
@@ -179,7 +179,7 @@
       if (data.ok) setStatus(`Saved ${data.count} step${data.count !== 1 ? 's' : ''}. Device picks these up on next boot.`, 'ok');
       else setStatus('Save failed: ' + JSON.stringify(data), 'error');
     } catch (e) {
-      setStatus('Network error — ' + e.message, 'error');
+      setStatus('Network error: ' + e.message, 'error');
     }
   }
 

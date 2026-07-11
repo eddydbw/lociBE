@@ -97,7 +97,7 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 .open-slot .dots i{width:9px;height:9px;border-radius:50%}
 .open-slot .t1{font-family:'Mansalva',cursive;font-size:clamp(16px,2.4vmin,24px);line-height:1.2}
 .open-slot .t2{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(12px,1.6vmin,15px)}
-.open-slot .qr{width:clamp(56px,11vmin,110px);height:auto;border-radius:6px}
+.open-slot .qr{width:clamp(110px,22vmin,190px);height:auto;border-radius:6px}
 /* the no-slot alternative (sixthSlot:"centered"): five cards, self-balancing rows */
 .wall.centered{display:flex;flex-wrap:wrap;justify-content:center}
 .wall.centered .cardw{flex:0 1 230px}
@@ -248,7 +248,7 @@ const DATA = {
     wallLabel:"wonderings from this exhibition",
     arriveCta:"✳ watch one arrive",
     yoursTitle:"the next wondering is yours",
-    yoursSub:"scan it — borrow the lens and send one to this wall",
+    yoursSub:"scan it, borrow the lens, and send one to this wall",
     revealEyebrow:"a wondering arriving…",
     revisitEyebrow:"a wondering from the wall",
     revealPlabel:"the lens asked",
@@ -433,7 +433,7 @@ document.addEventListener('click',e=>{
   if(!card||card.classList.contains('open-slot'))return;
   tapCard(card.dataset.wid);
 });
-const BUILD='exhibit2-2026-07-09e';
+const BUILD='exhibit2-2026-07-11a';
 console.log('[loci]',BUILD);
 
 async function initWall(){

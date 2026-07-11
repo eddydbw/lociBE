@@ -60,7 +60,7 @@ def require_staff_password():
     auth = request.authorization
     if auth and auth.password and hmac.compare_digest(auth.password, EXHIBIT_PASSWORD):
         return None
-    return Response("Loci — staff only.", 401,
+    return Response("Loci staff only.", 401,
                     {"WWW-Authenticate": 'Basic realm="Loci staff"'})
 
 def get_db():
@@ -252,7 +252,7 @@ DEMO_SCRIPT = {
                         'medium': 'cam',
                         'challenge': False,
                         'prompt': "Find something beautiful that you can't carry",
-                        'opener': 'He found something too big, too fixed, too much to take away. Ask: <b>"What made you stop at this — what did you see?"</b>',
+                        'opener': 'He found something too big, too fixed, too much to take away. Ask: <b>"What made you stop at this? What did you see?"</b>',
                         'moves': [
                             'Ask: "Would it still be beautiful if you could take it home?"',
                             'Ask: "Does something being unmovable make it more or less beautiful?"',
@@ -537,7 +537,7 @@ def parent(device_id="lens01"):
 # ---------------------------------------------------------------------------
 EXHIBIT_MANIFEST = {
     "id": "/exhibit/demo",
-    "name": "Loci — Exhibition",
+    "name": "Loci Exhibition",
     "short_name": "Loci",
     "description": "A wall of children's wonderings, arriving live from the Loci lens.",
     "start_url": "/exhibit/demo",
@@ -574,7 +574,7 @@ EXHIBIT2_HTML = open(str(BASE_DIR / "loci-exhibit-scroll.html"), encoding="utf-8
 
 EXHIBIT2_MANIFEST = dict(EXHIBIT_MANIFEST,
                          id="/exhibit2/demo", start_url="/exhibit2/demo",
-                         scope="/exhibit2", name="Loci — Visitors' Wall")
+                         scope="/exhibit2", name="Loci Visitors' Wall")
 
 @app.route("/exhibit2/manifest.webmanifest")
 def exhibit2_manifest():
@@ -798,7 +798,7 @@ def wonders_reset(device_id):
 
 ADMIN2_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loci — exhibit 2 admin</title>
+<title>Loci exhibit 2 admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Mansalva&family=Coming+Soon&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 body{font-family:'Outfit',sans-serif;background:#FFFDF4;color:#2A2620;margin:0;padding:28px}
@@ -814,7 +814,7 @@ button{font-family:'Outfit',sans-serif;font-weight:600;font-size:17px;padding:14
 pre{background:#FFFEFB;border:1px solid #E9E3D2;border-radius:12px;padding:14px;
   white-space:pre-wrap;word-break:break-all;font-size:13px;min-height:20px}
 </style></head><body><div class="box">
-<h1>exhibit 2 — the wall</h1>
+<h1>exhibit 2: the wall</h1>
 <p>Clears every visitor wondering for a device. <b>Archive</b> moves the photos and
 a JSON of their words into <code>uploads/archive/</code> first; <b>delete</b> removes them for good.</p>
 <label>device id</label><input id="dev" value="demo">

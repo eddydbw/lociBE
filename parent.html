@@ -324,7 +324,7 @@ async function fetchData() {
 function render(data) {
   document.getElementById('topic').textContent = data.topic || '';
   document.getElementById('child').textContent = data.child || '';
-  document.title = 'Loci — ' + (data.topic || 'Parent');
+  document.title = 'Loci - ' + (data.topic || 'Parent');
 
   const routesEl = document.getElementById('routes');
   routesEl.innerHTML = data.routes.map(route).join('');
