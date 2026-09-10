@@ -14,14 +14,15 @@ import mimetypes
 mimetypes.add_type("font/woff2", ".woff2")
 from pathlib import Path
 from flask import (Flask, request, jsonify, send_from_directory,
-                   abort, Response, stream_with_context)
+                   abort, redirect, Response, stream_with_context)
 
-BASE_DIR   = Path(__file__).parent
-UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", str(BASE_DIR / "uploads")))
-DB_PATH    = Path(os.environ.get("DB_PATH",    str(BASE_DIR / "loci.db")))
-PHOTOS_DIR = UPLOAD_DIR / "photos"
-AUDIO_DIR  = UPLOAD_DIR / "audio"
-PORT       = int(os.environ.get("PORT", 5000))
+BASE_DIR     = Path(__file__).parent
+UPLOAD_DIR   = Path(os.environ.get("UPLOAD_DIR", str(BASE_DIR / "uploads")))
+DB_PATH      = Path(os.environ.get("DB_PATH",    str(BASE_DIR / "loci.db")))
+PHOTOS_DIR   = UPLOAD_DIR / "photos"
+AUDIO_DIR    = UPLOAD_DIR / "audio"
+LOCI_APP_DIR = BASE_DIR / "loci-app"
+PORT         = int(os.environ.get("PORT", 5000))
 
 for d in [PHOTOS_DIR, AUDIO_DIR]:
     d.mkdir(parents=True, exist_ok=True)
@@ -43,7 +44,10 @@ PUBLIC_PREFIXES = (
     "/exhibit2",         # visitors' wall tablet page + its manifest
     "/api/wonders",      # wonder POST + exhibit2 feed
     "/uploads/photos",   # photos shown on the wall
+    "/uploads/audio",    # recordings played back in the parent app
     "/exhibit/qr.svg",   # QR card image embedded in exhibit2
+    "/parent-app",       # installable parent PWA (live-data.js + its assets)
+    "/api/parent",       # the feed the parent app's live-data.js reads
     "/static",           # icons + self-hosted fonts
     "/favicon.ico",      # browsers ask; never worth an auth prompt
 )
@@ -531,6 +535,29 @@ def admin(device_id="lens01"):
 @app.route("/parent/<device_id>")
 def parent(device_id="lens01"):
     return PARENT_HTML, 200, {"Content-Type": "text/html"}
+
+# ---------------------------------------------------------------------------
+# Parent app — installable PWA (Wonders feed, "talk about this" facilitation
+# guides, Library, Lens exchange). Multi-file, so it's served straight from
+# loci-app/ rather than read into a string constant like the single-file
+# pages above. live-data.js (inside that folder) fetches /api/parent/<id>
+# below and reshapes it into the days/routes/guides the app already renders;
+# /?device=<id> picks the device, default "demo". Public per PUBLIC_PREFIXES,
+# same as /wonder and /exhibit2.
+# ---------------------------------------------------------------------------
+@app.route("/parent-app")
+def parent_app_redirect():
+    # Every asset in loci-app/index.html is a relative path, so the trailing slash matters.
+    qs = ("?" + request.query_string.decode()) if request.query_string else ""
+    return redirect(f"/parent-app/{qs}")
+
+@app.route("/parent-app/")
+def parent_app_index():
+    return send_from_directory(str(LOCI_APP_DIR), "index.html")
+
+@app.route("/parent-app/<path:filename>")
+def parent_app_static(filename):
+    return send_from_directory(str(LOCI_APP_DIR), filename)
 
 # ---------------------------------------------------------------------------
 # Exhibition tablet display — installable PWA
