@@ -12,6 +12,14 @@ import sqlite3
 import mimetypes
 
 mimetypes.add_type("font/woff2", ".woff2")
+# Browser MediaRecorder output (the wonder page's mic option) — Python's default table maps
+# .webm to video/webm, which is wrong for an audio-only recording, and doesn't know .m4a at all.
+mimetypes.add_type("audio/webm", ".webm")
+mimetypes.add_type("audio/mp4", ".m4a")
+mimetypes.add_type("audio/ogg", ".ogg")
+# Some platforms' default table maps .wav to the legacy "audio/x-wav" — pin it so serve_audio's
+# guess_type() keeps serving the physical lens's .wav captures exactly as before this change.
+mimetypes.add_type("audio/wav", ".wav")
 from pathlib import Path
 from flask import (Flask, request, jsonify, send_from_directory,
                    abort, redirect, Response, stream_with_context)
@@ -114,10 +122,12 @@ def init_db():
                 order_idx  INTEGER DEFAULT 0
             )
         """)
-        # migrate pre-topic / pre-visitor databases in place
+        # migrate pre-topic / pre-visitor / pre-audio databases in place
         for stmt in ("ALTER TABLE captures ADD COLUMN topic TEXT",
                      "ALTER TABLE steps ADD COLUMN topic TEXT",
-                     "ALTER TABLE wonders ADD COLUMN visitor_id TEXT"):
+                     "ALTER TABLE wonders ADD COLUMN visitor_id TEXT",
+                     "ALTER TABLE wonders ADD COLUMN audio_path TEXT",
+                     "ALTER TABLE wonders ADD COLUMN question TEXT"):
             try:
                 db.execute(stmt)
             except sqlite3.OperationalError:
@@ -486,7 +496,10 @@ def serve_photo(filename):
 
 @app.route("/uploads/audio/<filename>")
 def serve_audio(filename):
-    return range_response(AUDIO_DIR / filename, "audio/wav")
+    # Lens captures are always .wav; wonder-page recordings can be .webm/.m4a/.ogg —
+    # guess from the real extension instead of assuming wav for everything.
+    mimetype = mimetypes.guess_type(filename)[0] or "audio/wav"
+    return range_response(AUDIO_DIR / filename, mimetype)
 
 VIEWER_HTML = open(str(BASE_DIR / "viewer.html"), encoding="utf-8").read()
 
@@ -640,6 +653,14 @@ def exhibit_qr():
     return Response(buff.getvalue(), mimetype="image/svg+xml",
                     headers={"Cache-Control": "no-cache"})
 
+AUDIO_EXT_BY_MIME = {
+    "audio/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a",
+    "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav",
+}
+
+def audio_ext_for(mimetype):
+    return AUDIO_EXT_BY_MIME.get((mimetype or "").split(";")[0].strip().lower(), "webm")
+
 @app.route("/api/wonders", methods=["POST"])
 def create_wonder():
     topic = (request.form.get("topic") or "").strip()
@@ -648,23 +669,40 @@ def create_wonder():
     if "photo" not in request.files or not request.files["photo"].filename:
         return jsonify({"ok": False, "error": "no photo"}), 400
     prompt     = " ".join((request.form.get("prompt") or "").split())[:200]
+    question   = " ".join((request.form.get("question") or "").split())[:200]
     response   = " ".join((request.form.get("response") or "").split())[:500]
     device_id  = (request.form.get("device_id") or "demo").strip()[:64]
     # Set by the wonder page (persisted in that visitor's browser) so they can find their own
     # wonderings again in the parent app later — distinct from device_id, which identifies the
     # shared exhibit tablet/wall, not the visitor.
     visitor_id = (request.form.get("visitor_id") or "").strip()[:64] or None
+
+    has_audio = "audio" in request.files and request.files["audio"].filename
+    if not response and not has_audio:
+        return jsonify({"ok": False, "error": "no response"}), 400
+
     wonder_id  = str(uuid.uuid4())
     photo_path = PHOTOS_DIR / f"wonder-{wonder_id}.jpg"
     request.files["photo"].save(str(photo_path))
+
+    audio_path = None
+    if has_audio:
+        # A MediaRecorder blob (webm/mp4/ogg) is already a complete, correctly-sized file —
+        # unlike the physical lens's raw-PCM stream, it needs no header fix-up before saving.
+        f = request.files["audio"]
+        ext = audio_ext_for(request.form.get("audio_type") or f.mimetype)
+        audio_path = AUDIO_DIR / f"wonder-{wonder_id}.{ext}"
+        f.save(str(audio_path))
+
     with get_db() as db:
         db.execute(
-            "INSERT INTO wonders (id, device_id, topic, prompt, response, photo_path, created_at, visitor_id) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (wonder_id, device_id, topic, prompt, response, str(photo_path), time.time(), visitor_id)
+            "INSERT INTO wonders (id, device_id, topic, prompt, question, response, photo_path, "
+            "audio_path, created_at, visitor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (wonder_id, device_id, topic, prompt, question, response, str(photo_path),
+             str(audio_path) if audio_path else None, time.time(), visitor_id)
         )
         db.commit()
-    print(f"[wonder] {wonder_id}  '{prompt}'  {device_id}  topic={topic}")
+    print(f"[wonder] {wonder_id}  '{prompt}'  {device_id}  topic={topic}  audio={bool(audio_path)}")
     return jsonify({"ok": True, "wonder_id": wonder_id}), 200
 
 @app.route("/api/wonders/<device_id>")
@@ -700,14 +738,18 @@ def list_wonders(device_id):
         rows = list(reversed(rows))   # oldest first
     out = []
     for r in rows:
-        out.append({
+        entry = {
             "id":       r["id"],
             "topic":    r["topic"],
             "prompt":   r["prompt"],
+            "question": r["question"],
             "response": r["response"],
             "photoUrl": f"/uploads/photos/{Path(r['photo_path']).name}",
             "created_at": r["created_at"],
-        })
+        }
+        if r["audio_path"]:
+            entry["audioUrl"] = f"/uploads/audio/{Path(r['audio_path']).name}"
+        out.append(entry)
     return jsonify(out)
 
 @app.route("/api/debug/prompts")

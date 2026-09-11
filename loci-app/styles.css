@@ -409,6 +409,13 @@ button.audio-row{ text-align: left; }
 .tab-head .sub{ color: var(--white); font-size: 14.5px; margin-top: 6px; max-width: 34ch; }
 .tab-body{ padding: 20px 16px 0; }
 
+/* Library/Lens only, when a live capture source has replaced the demo script (see app.js's
+   demoNoticeHTML) — those two tabs still describe zines/a physical lens the live session has neither. */
+.demo-notice{
+  background: var(--line); color: var(--ink-soft); font-size: 13.5px; line-height: 1.4;
+  border-radius: 12px; padding: 10px 14px; margin-bottom: 16px;
+}
+
 /* ---------- Library ---------- */
 .lib-intro{ color: var(--ink); font-size: 15.5px; padding: 0 4px 16px; }
 .lib-h{ font-size: 24px; margin: 6px 4px 12px; }

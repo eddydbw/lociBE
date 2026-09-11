@@ -519,6 +519,11 @@ function spreadTint(spread, i) {
   if (r && r.route.topicTint) return [r.route.topicTint, r.route.topicEdge];
   return TINTS[i % TINTS.length];
 }
+// Shown on Library/Lens when live-data.js has replaced the demo script with a real capture
+// source — those two tabs still describe zines/a physical lens this exhibit doesn't have.
+function demoNoticeHTML() {
+  return D.liveDemoNotice ? `<div class="demo-notice">${te(C.demoNotice)}</div>` : '';
+}
 function libraryHTML() {
   const L = D.library;
   const packs = (L.owned || []).map((p) => {
@@ -548,6 +553,7 @@ function libraryHTML() {
   }).join('');
   return `<div class="head-wrap"><header class="tab-head"><h1>${esc(C.nav.library)}</h1><p class="sub">${te(L.intro)}</p></header></div>
     <div class="tab-body">
+      ${demoNoticeHTML()}
       <h2 class="lib-h">${te(C.library.owned)}</h2>${packs}
       <h2 class="lib-h">${esc(C.library.more)}</h2><div class="browse-grid">${browse}</div>
     </div>`;
@@ -577,6 +583,7 @@ function lensHTML() {
   // The device strip and swap card sit outside the scroller so auto-scroll-to-newest never hides them.
   return `<div class="head-wrap"><header class="tab-head"><h1>${esc(C.nav.lens)}</h1></header></div>
     <div class="lens-top">
+      ${demoNoticeHTML()}
       <div class="device${ui.deviceOpen ? ' open' : ''}">
         <button class="row" data-action="device" aria-expanded="${ui.deviceOpen}" aria-controls="lens-note">${I.battery}<span>${te(C.lens.strip, { name: t(dev.name || ''), battery: dev.battery == null ? '' : dev.battery, sync: dev.lastSync || '' })}</span><span class="chev">${I.chevDown}</span></button>
         <p class="note" id="lens-note"><b>${esc(queueLine)}</b>${te(queue.note || '')}</p>

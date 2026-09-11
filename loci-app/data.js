@@ -219,6 +219,10 @@ const LOCI_DATA = {
   // ---- Interface copy (everything that isn't per-route content) ----
   copy: {
     nav: { wonders: "Wonders", library: "Library", lens: "Lens", settings: "Settings" },
+    // Shown on Library/Lens only when live-data.js has replaced the demo script with a real
+    // capture source (D.liveDemoNotice) — inert here, since nothing sets that flag in the
+    // standalone demo.
+    demoNotice: "Sample content for this demo — nothing to do here for today's exhibit.",
 
     wonders: {
       filters: { all: "All", audio: "Voice recordings", photo: "Photos" },

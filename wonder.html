@@ -11,7 +11,7 @@
 /* ==========================================================================
    LOCI — VISITOR WONDER PAGE (phone, via QR on the exhibit tablet)
    Pick a big question → the lens asks → catch it with your camera →
-   say it in a sentence → it flies to the wall.
+   type or record an answer → see it in the parent app.
    ========================================================================== */
 :root{
   --cream:#FFFDF4;--card:#FFFEFB;--ink:#2A2620;--soft:#7A7466;--line:#E9E3D2;
@@ -26,9 +26,12 @@ button{font-family:'Outfit',sans-serif;cursor:pointer;border:none}
 textarea{font-family:'Outfit',sans-serif}
 .page{max-width:560px;margin:0 auto;padding:max(22px,4vw) max(20px,4.5vw) 48px;
   display:flex;flex-direction:column;gap:max(18px,4vw)}
-.masthead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.masthead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .wordmark{font-family:'Mansalva',cursive;font-size:clamp(44px,12vw,56px);line-height:1}
 .tagline{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(16px,4.4vw,19px)}
+.skip-link{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(14px,3.6vw,16px);
+  text-decoration:underline dotted;white-space:nowrap;padding:6px 0}
 .intro{color:var(--soft);font-size:clamp(18px,4.8vw,21px);line-height:1.45}
 .intro b{color:var(--ink);font-weight:500}
 .steplabel{font-family:'Coming Soon',cursive;color:var(--soft);font-size:clamp(16px,4.4vw,19px)}
@@ -60,9 +63,20 @@ textarea{font-family:'Outfit',sans-serif}
 .preview img{display:block;width:100%;max-height:52dvh;object-fit:cover}
 .retake{position:absolute;top:12px;right:12px;background:rgba(255,253,244,.92);
   color:var(--ink);font-size:clamp(16px,4.2vw,18px);padding:10px 18px;border-radius:999px}
+.followup{font-size:clamp(24px,6.5vw,29px);font-weight:500;line-height:1.28;color:var(--ink)}
+.mode-toggle{display:flex;gap:10px}
+.mode-pill{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:999px;
+  padding:12px 16px;font-size:clamp(16px,4.2vw,18px);color:var(--soft);font-weight:500;text-align:center;transition:transform .12s ease}
+.mode-pill:active{transform:scale(.97)}
+.mode-pill.active{border-color:var(--tc,var(--line));background:var(--tctint,var(--card));color:var(--ink);font-weight:600}
 #respIn{width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:18px;
   padding:16px 18px;font-size:clamp(19px,5vw,22px);color:var(--ink);outline:none;resize:none;line-height:1.4}
 #respIn:focus{border-color:var(--tc,#999)}
+.rec-done{display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--card);
+  border:1.5px solid var(--line);border-radius:18px;padding:18px}
+.rec-done audio{width:100%}
+.link-btn{background:none;color:var(--soft);font-family:'Coming Soon',cursive;
+  font-size:clamp(15px,4vw,17px);text-decoration:underline dotted;padding:4px}
 .btn-send{background:var(--tc);color:var(--ink);font-weight:600;font-size:clamp(21px,5.6vw,24px);
   padding:20px 22px;border-radius:999px;box-shadow:0 10px 24px -12px var(--tc)}
 .btn-send:disabled{opacity:.55}
@@ -78,7 +92,6 @@ textarea{font-family:'Outfit',sans-serif}
   font-weight:500;font-size:clamp(19px,5vw,21px);padding:16px 28px;border-radius:999px;margin-top:10px}
 .btn-parent{display:block;background:var(--ink);color:var(--cream);text-decoration:none;
   font-weight:600;font-size:clamp(19px,5vw,21px);padding:16px 28px;border-radius:999px;margin-top:22px}
-.parent-hint{color:var(--soft);font-size:clamp(15px,4vw,17px);max-width:32ch;margin-top:-4px}
 </style>
 </head>
 <body>
@@ -89,22 +102,29 @@ textarea{font-family:'Outfit',sans-serif}
 const DATA = {
   copy:{
     wordmark:"Loci", tagline:"a lens for wondering",
-    intro:"Borrow the lens for a minute. <b>Pick a big question, catch a wondering with your camera, and send it to the wall.</b>",
+    intro:"Borrow the lens for a minute. <b>Pick a big question, catch a wondering with your camera, and answer what it asks.</b>",
     step1:"1 · pick a big question",
     step2:"2 · the lens asks…",
-    step3:"3 · what did you catch?",
+    step3:"3 · one more thing",
     lensAsks:"the lens asks",
     reroll:"ask me another",
     openCamera:"catch it with your camera",
-    respPlaceholder:"say it in a sentence…",
-    send:"send it to the wall ✳",
-    sending:"flying…",
-    errSend:"it didn’t quite fly. Try again?",
-    sentBig:"it’s on its way!",
-    sentNote:"Look up! Your wondering lands on the wall in a moment.",
+    typeIt:"Type it",
+    recordIt:"Record it",
+    respPlaceholder:"type your answer…",
+    recordStart:"Record your answer",
+    recordWaiting:"Waiting for the microphone…",
+    recordStop:"Stop",
+    recordAgain:"Record again",
+    micDenied:"Couldn’t reach the microphone — try typing instead.",
+    send:"catch it ✳",
+    sending:"catching…",
+    errSend:"it didn’t quite catch. Try again?",
+    sentBig:"caught it!",
+    sentNote:"Nice catch — see it in the parent app, with a few ways to start the conversation.",
     again:"catch another",
     parentLink:"Talk about it →",
-    parentHint:"See it in the parent app, with a few ways to start the conversation.",
+    skipLink:"Parent app →",
   },
 
   /* the five zine topics; slugs must match the server's TOPIC_SLUGS */
@@ -137,6 +157,16 @@ const DATA = {
       "Find something real that you can't touch",
     ],
   },
+
+  /* the follow-up question answered after the photo — one real question per topic,
+     not a generic "what did you catch?". KEYS ARE THE SLUGS above. */
+  followUp:{
+    "lying":          "What gave it away?",
+    "invisible-ring": "Which rule matters most there, and why?",
+    "beauty":         "What makes it beautiful?",
+    "art":            "What makes it look like an accident?",
+    "real":           "What makes it real?",
+  },
 };
 
 /* ============================ helpers ============================ */
@@ -159,13 +189,20 @@ function visitorId(){
   }catch(_){ return 'visitor-'+Math.random().toString(16).slice(2); }
 }
 const VISITOR=visitorId();
+const parentAppUrl=()=>`/parent-app/?device=${encodeURIComponent(DEVICE)}&visitor=${encodeURIComponent(VISITOR)}`;
 
 let topic=null, prompt='', promptIdx=-1, photoBlob=null;
+let mode='type', audioBlob=null, audioMime='';
+let mediaRecorder=null, recChunks=[], recStart=0, recTimer=null;
+const canRecord=!!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
 /* ============================ render ============================ */
 function render(){
   $('page').innerHTML=`
-    <div class="masthead"><div class="wordmark">${C.wordmark}</div><div class="tagline">${C.tagline}</div></div>
+    <div class="masthead">
+      <div class="brand"><div class="wordmark">${C.wordmark}</div><div class="tagline">${C.tagline}</div></div>
+      <a class="skip-link" href="${parentAppUrl()}">${C.skipLink}</a>
+    </div>
     <div class="intro">${C.intro}</div>
     <div class="steplabel">${C.step1}</div>
     <div class="topics">${DATA.topics.map((t,i)=>
@@ -184,10 +221,16 @@ function render(){
     </div>
     <div class="hidden" id="step3">
       <div class="steplabel" style="margin-bottom:10px">${C.step3}</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;flex-direction:column;gap:16px">
         <div class="preview"><img id="pimg" alt="">
           <button class="retake" onclick="$('file').click()">↺ retake</button></div>
-        <textarea id="respIn" rows="2" maxlength="300" placeholder="${C.respPlaceholder}"></textarea>
+        <div class="followup" id="followup"></div>
+        ${canRecord ? `<div class="mode-toggle" role="group">
+          <button class="mode-pill active" id="modeType" onclick="setMode('type')">${C.typeIt}</button>
+          <button class="mode-pill" id="modeRecord" onclick="setMode('record')">${C.recordIt}</button>
+        </div>` : ''}
+        <div id="typeBox"><textarea id="respIn" rows="2" maxlength="300" placeholder="${C.respPlaceholder}"></textarea></div>
+        <div class="hidden" id="recordBox"></div>
         <button class="btn-send" id="sendBtn" onclick="send()">${C.send}</button>
         <div class="err hidden" id="err">${C.errSend}</div>
       </div>
@@ -207,6 +250,7 @@ function pickTopic(i){
   card.style.setProperty('--tctint',tint);
   card.style.setProperty('--tcdeep',deep);
   reroll();
+  $('followup').textContent=DATA.followUp[t.slug]||'';
   /* one question per topic: no point offering another */
   $('rerollBtn').style.display=DATA.prompts[t.slug].length>1?'':'none';
   $('step2').classList.remove('hidden');
@@ -241,10 +285,64 @@ function onPhoto(){
   img.src=URL.createObjectURL(f);
 }
 
+function setMode(m){
+  mode=m;
+  $('modeType').classList.toggle('active',m==='type');
+  $('modeRecord').classList.toggle('active',m==='record');
+  $('typeBox').classList.toggle('hidden',m!=='type');
+  $('recordBox').classList.toggle('hidden',m!=='record');
+  if(m==='record' && !$('recordBox').childElementCount) renderRecordIdle();
+}
+function renderRecordIdle(){
+  $('recordBox').innerHTML=`<button class="btn-camera" id="micBtn" onclick="toggleRecording()">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v3"/></svg>
+      <span id="micLabel">${C.recordStart}</span></button>`;
+}
+async function toggleRecording(){
+  if(mediaRecorder && mediaRecorder.state==='recording'){ mediaRecorder.stop(); return; }
+  const btn=$('micBtn'); btn.disabled=true; $('micLabel').textContent=C.recordWaiting;
+  let stream;
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(_){
+    renderRecordIdle();
+    $('err').textContent=C.micDenied; $('err').classList.remove('hidden');
+    return;
+  }
+  recChunks=[];
+  mediaRecorder=new MediaRecorder(stream);
+  audioMime=mediaRecorder.mimeType||'audio/webm';
+  mediaRecorder.ondataavailable=e=>{ if(e.data&&e.data.size) recChunks.push(e.data); };
+  mediaRecorder.onstop=()=>{
+    stream.getTracks().forEach(tr=>tr.stop());
+    clearInterval(recTimer); recTimer=null;
+    audioBlob=new Blob(recChunks,{type:audioMime});
+    renderRecordDone();
+  };
+  recStart=Date.now();
+  mediaRecorder.start();
+  btn.disabled=false;
+  updateMicLabel();
+  recTimer=setInterval(updateMicLabel,500);
+}
+function updateMicLabel(){
+  const el=$('micLabel'); if(!el)return;
+  const secs=Math.floor((Date.now()-recStart)/1000);
+  el.textContent=`${C.recordStop} (${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')})`;
+}
+function renderRecordDone(){
+  const url=URL.createObjectURL(audioBlob);
+  $('recordBox').innerHTML=`<div class="rec-done">
+      <audio controls src="${url}"></audio>
+      <button class="link-btn" onclick="reRecord()">${C.recordAgain}</button>
+    </div>`;
+}
+function reRecord(){ audioBlob=null; renderRecordIdle(); }
+
 async function send(){
   if(!photoBlob||!topic)return;
-  const resp=$('respIn').value.trim();
-  if(!resp){$('respIn').focus();return;}
+  const resp=mode==='type' ? $('respIn').value.trim() : '';
+  if(mode==='type' && !resp){ $('respIn').focus(); return; }
+  if(mode==='record' && !audioBlob) return;
   const btn=$('sendBtn');
   btn.disabled=true;btn.textContent=C.sending;
   $('err').classList.add('hidden');
@@ -252,7 +350,14 @@ async function send(){
   fd.append('photo',photoBlob,'wonder.jpg');
   fd.append('topic',topic.slug);
   fd.append('prompt',prompt);
-  fd.append('response',resp);
+  fd.append('question',DATA.followUp[topic.slug]||'');
+  if(mode==='record' && audioBlob){
+    const ext=(audioMime.split('/')[1]||'webm').split(';')[0];
+    fd.append('audio',audioBlob,`wonder.${ext}`);
+    fd.append('audio_type',audioMime);
+  } else {
+    fd.append('response',resp);
+  }
   fd.append('device_id',DEVICE);
   fd.append('visitor_id',VISITOR);
   try{
@@ -271,8 +376,7 @@ function showSent(){
       <div class="dots">${DATA.topics.map(t=>`<i style="background:${t.color}"></i>`).join('')}</div>
       <div class="big">${C.sentBig}</div>
       <div class="note">${C.sentNote}</div>
-      <a class="btn-parent" href="/parent-app/?device=${encodeURIComponent(DEVICE)}&visitor=${encodeURIComponent(VISITOR)}">${C.parentLink}</a>
-      <div class="parent-hint">${C.parentHint}</div>
+      <a class="btn-parent" href="${parentAppUrl()}">${C.parentLink}</a>
       <button class="btn-again" style="--tc:${topic.color}" onclick="location.reload()">${C.again}</button>
     </div>`;
 }

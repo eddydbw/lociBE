@@ -7,21 +7,22 @@
    only ever reads LOCI_DATA. A photo/audio URL dropped into a step's
    `asset` field renders as a filled, read-only slot: app.js already
    supports that ("that is the seam a real backend drops into" — see its
-   asset storage comment). If a fetch fails (offline, no backend, nothing
-   captured yet) LOCI_DATA is left exactly as data.js defined it, so the
-   static script is a fallback, never an error state.
+   asset storage comment). If a fetch fails (offline, no backend) LOCI_DATA
+   is left exactly as data.js defined it, so the static script is a
+   fallback, never an error state — but "nothing captured *yet*" (a real
+   live session with zero content so far) is not that case: it renders a
+   genuine empty Wonders day, not the static demo (see applyLiveModeAdjustments).
 
    Two sources, chosen by URL param:
 
    - ?visitor=<id> (+ optional ?device=<exhibit id>, default "demo") —
      the exhibit's wonder page (wonder.html): a visitor without a working
-     physical lens picks a topic and captures a photo + a typed sentence
-     from their own phone. Their own wonderings (not the whole shared
-     wall) are pulled back out of /api/wonders/<device>?visitor_id=<id>
-     and become one route per capture. There's no recording, so the
-     guide's recap shows the typed sentence as a quote instead of a
-     player (app.js's `response` / `recap.response` fields — see its
-     child-quote support).
+     physical lens picks a topic, captures a photo, and answers a follow-up
+     question by typing or recording. Their own wonderings (not the whole
+     shared wall) are pulled back out of /api/wonders/<device>?visitor_id=<id>
+     and become one route per capture — one photo step, plus (if they
+     recorded) an audio step, or (if they typed) a quote under the photo
+     (app.js's `response` / `recap.response` "child-quote" fields).
 
    - ?device=<id> alone (default "demo") — the physical lens flow: a
      fixed conversation script (server.py's DEMO_SCRIPT) whose cam/aud
@@ -97,13 +98,46 @@ window.LOCI_LIVE_READY = (async () => {
     } catch (_) { return null; }   // offline, unreachable, or this page opened standalone
   }
 
+  // This file only loads in the hosted lociBE copy, never the standalone LociAPP demo, so
+  // "this is a live deployment, not the Ethan-persona demo" is always true here — not
+  // conditional on any fetch succeeding. Applied up front so it also covers the empty-state
+  // case (zero captures so far) in both branches below.
+  applyLiveModeAdjustments();
+
   if (visitor) await loadFromWonders(device, visitor);
   else await loadFromLensScript(device);
 
-  /* ---- wonder-page flow: one route per typed+photographed capture ---- */
+  function applyLiveModeAdjustments() {
+    D.liveDemoNotice = true;
+    D.week.subline = "Exploring this week's wonderings";
+    D.copy.wonders.emptyToday = "Nothing captured yet — go back and catch a wondering to see it here.";
+    D.copy.wonders.began = "This is where it began.";
+
+    // Library/Lens describe features this exhibit doesn't have (zines, a physical lens
+    // exchange) — the tabs stay (app.js shows a demo-notice banner on them, gated on
+    // liveDemoNotice above), but their copy shouldn't keep naming a fictional child.
+    D.lens.device.name = "The lens";   // also fixes Settings' "Connected lens" row, sourced from this
+    const profileRow = (D.copy.settings.rows || []).find((r) => r.id === 'profile');
+    if (profileRow) profileRow.value = '';
+    D.library.intro = "Sample zines that would ground each topic before a lens journey begins.";
+    D.copy.library.owned = "Zines";
+    if (D.library.owned[0]) {
+      D.library.owned[0].listenFor = [
+        "Reasons that point at the object (\"it's shiny\") vs. reasons that point back at the person (\"it reminds me of…\")",
+        "Moments where someone generalises — \"everyone thinks\", \"nobody likes\"",
+        "Someone changing their mind mid-sentence. That's the thinking happening — don't rescue them from it."
+      ];
+    }
+    D.copy.lens.preview = "This is how it'll appear on the lens";
+    D.copy.lens.sent = "Sent to the lens";
+    D.copy.lens.sheetTitle = "Send to the lens";
+    D.copy.lens.photoFromLens = "Photo from the lens";
+  }
+
+  /* ---- wonder-page flow: one route per photo+answer capture ---- */
   async function loadFromWonders(device, visitorId) {
     const rows = await getJSON(`/api/wonders/${encodeURIComponent(device)}?visitor_id=${encodeURIComponent(visitorId)}&limit=60`);
-    if (!Array.isArray(rows) || !rows.length) return;   // nothing captured yet — keep the static script
+    if (!Array.isArray(rows)) return;   // the fetch itself failed (offline/unreachable) — keep the static demo
 
     // The wonder page's five topics are the same five as the lens script (server.py's
     // DEMO_SCRIPT); borrow that script's title/colour/opener/moves per topic rather than
@@ -114,30 +148,37 @@ window.LOCI_LIVE_READY = (async () => {
       const cam = (route.nodes || []).find((n) => n.medium === 'cam');
       byTopic.set(route.topic, { title: route.title, dot: route.dot, cam });
     });
+    // Only used if the script fetch above failed — the topic slug is still readable, just plainer.
+    const titleFromSlug = (slug) => (slug || '').split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
     const dayMap = new Map();
     const guides = {};
-
-    // Only used if the script fetch above failed — the topic slug is still readable, just plainer.
-    const titleFromSlug = (slug) => (slug || '').split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
     rows.forEach((row) => {
       const t = byTopic.get(row.topic);
       const topicTitle = (t && t.title) || titleFromSlug(row.topic);
       const routeId = `r-wonder-${row.id}`;
-      const guideId = `g-wonder-${row.id}`;
+      const photoGuideId = `g-wonder-${row.id}`;
       const dayId = dayIdFor(Number(row.created_at) * 1000);
+      const asked = row.question ? ` Asked "${row.question}",` : '';
 
-      guides[guideId] = {
+      const steps = [{ type: 'photo', prompt: row.prompt, asset: row.photoUrl, guideId: photoGuideId }];
+      let recap;
+      if (row.audioUrl) {
+        steps.push({ type: 'audio', prompt: row.question || row.prompt, asset: row.audioUrl });
+        recap = { photoFrom: [routeId, 0], audioFrom: [routeId, 1], response: null,
+                  text: `Chosen for "${row.prompt}".${asked} then recorded:` };
+      } else {
+        steps[0].response = row.response;
+        recap = { photoFrom: [routeId, 0], audioFrom: null, response: row.response,
+                  text: `Chosen for "${row.prompt}".${asked} they wrote:` };
+      }
+
+      guides[photoGuideId] = {
         title: "Talking about this photo",
         subtitle: `${topicTitle} · a 5-minute conversation, no expertise needed`,
-        recap: {
-          photoFrom: [routeId, 0],
-          audioFrom: null,
-          response: row.response,
-          text: `Chosen for "${row.prompt}", then written:`
-        },
-        before: "Read the sentence together first — you're not looking for a right answer, you're wondering alongside them. It's fine to be stumped; say so out loud.",
+        recap,
+        before: "Look at (or listen to) the answer together first — you're not looking for a right answer, you're wondering alongside them. It's fine to be stumped; say so out loud.",
         waysInIntro: "Openers that invite more than a yes or no. Tap one to see why it works.",
         starters: startersFrom(t && t.cam && t.cam.opener, t && t.cam && t.cam.moves),
         moves: MOVES_DEFAULT,
@@ -148,21 +189,22 @@ window.LOCI_LIVE_READY = (async () => {
       list.push({
         id: routeId, topic: topicTitle, topicTint: (t && t.dot) || '#F4E9F2', topicEdge: '#4A1042',
         meta: `Captured ${fmtTime(new Date(Number(row.created_at) * 1000))}`,
-        steps: [{ type: 'photo', prompt: row.prompt, asset: row.photoUrl, response: row.response, guideId }]
+        steps
       });
       dayMap.set(dayId, list);
     });
 
-    if (!dayMap.size) return;
+    // Even with nothing captured yet, replace the static demo outright — a visitor using the
+    // new "skip to parent app" link before their first capture should see a real empty state,
+    // not the static Ethan-persona demo routes.
     D.days = Array.from(dayMap.entries()).map(([id, routes]) => ({ id, routes }));
     D.guides = guides;
-    D.week.subline = "Exploring this week's wonderings";   // data.js's default names a child; there isn't one here
   }
 
   /* ---- physical lens flow: fixed script, filled in by real captures ---- */
   async function loadFromLensScript(device) {
     const data = await getJSON(`/api/parent/${encodeURIComponent(device)}`);
-    if (!data || !Array.isArray(data.routes)) return;
+    if (!data) return;   // the fetch itself failed (offline/unreachable/unknown device) — keep the static demo
     if (data.child) D.child.name = data.child;
 
     // The routes/nodes list carries the guide script text (opener, moves) but not real
@@ -177,7 +219,7 @@ window.LOCI_LIVE_READY = (async () => {
     const dayMap = new Map();
     const guides = {};
 
-    data.routes.forEach((route, ri) => {
+    (data.routes || []).forEach((route, ri) => {
       const routeId = `r-live-${device}-${ri}`;
       const steps = [];
       const stamps = [];
@@ -229,9 +271,9 @@ window.LOCI_LIVE_READY = (async () => {
       dayMap.set(dayId, list);
     });
 
-    if (!dayMap.size) return;   // nothing captured yet — keep the static script as the demo fallback
+    // As above: replace the static demo even when empty, so an unstarted lens shows a real
+    // empty state rather than the static Ethan-persona demo routes.
     D.days = Array.from(dayMap.entries()).map(([id, routes]) => ({ id, routes }));
     D.guides = guides;
-    D.week.subline = "Exploring this week's wonderings";   // data.js's default names a child; there isn't one here
   }
 })();
