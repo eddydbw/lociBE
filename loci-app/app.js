@@ -413,6 +413,8 @@ function routeCardHTML(route, filter) {
     let body = `<p class="prompt">${te(s.prompt)}</p>`;
     if (s.type === 'photo') {
       body += photoSlot(id, { alt: t(s.prompt) });
+      // A typed response (no recording made) — e.g. the exhibit's wonder-page captures.
+      if (s.response) body += `<p class="child-quote">“${te(s.response)}”</p>`;
       if (s.guideId && D.guides[s.guideId]) {
         body += route.talkedAt
           ? `<a class="btn orange-outline" href="#/guide/${esc(s.guideId)}">${te(C.wonders.talkAgain)}</a>
@@ -469,7 +471,8 @@ function guideHTML(guideId) {
       ${photoId ? photoSlot(photoId, { cls: 'thumb', label: C.slots.photoSmall, alt: '' }) : ''}
       <div class="recap-text">
         <p>${te((g.recap && g.recap.text) || '')}</p>
-        ${audioId ? audioPlayer(audioId, { compact: true, duration: audioStep && audioStep.duration, bars: 26 }) : ''}
+        ${audioId ? audioPlayer(audioId, { compact: true, duration: audioStep && audioStep.duration, bars: 26 })
+          : (g.recap && g.recap.response) ? `<p class="child-quote">“${te(g.recap.response)}”</p>` : ''}
       </div>
     </section>`;
 

@@ -76,6 +76,9 @@ textarea{font-family:'Outfit',sans-serif}
 .sent .dots i{width:13px;height:13px;border-radius:50%}
 .btn-again{background:var(--card);border:1.5px solid var(--tc,var(--line));color:var(--ink);
   font-weight:500;font-size:clamp(19px,5vw,21px);padding:16px 28px;border-radius:999px;margin-top:10px}
+.btn-parent{display:block;background:var(--ink);color:var(--cream);text-decoration:none;
+  font-weight:600;font-size:clamp(19px,5vw,21px);padding:16px 28px;border-radius:999px;margin-top:22px}
+.parent-hint{color:var(--soft);font-size:clamp(15px,4vw,17px);max-width:32ch;margin-top:-4px}
 </style>
 </head>
 <body>
@@ -100,6 +103,8 @@ const DATA = {
     sentBig:"it’s on its way!",
     sentNote:"Look up! Your wondering lands on the wall in a moment.",
     again:"catch another",
+    parentLink:"Talk about it →",
+    parentHint:"See it in the parent app, with a few ways to start the conversation.",
   },
 
   /* the five zine topics; slugs must match the server's TOPIC_SLUGS */
@@ -142,6 +147,18 @@ function mix(a,b,t){const A=hexRGB(a),B=hexRGB(b);
 const $=id=>document.getElementById(id);
 const DEVICE=(location.pathname.match(/\/wonder\/([^\/]+)/)||[])[1]||'demo';
 const C=DATA.copy;
+
+/* One id per phone, kept across visits/captures this session, so this visitor's own
+   wonderings (not the whole shared wall) can be found again from the parent app. */
+function visitorId(){
+  const KEY='loci_visitor_id';
+  try{
+    let id=localStorage.getItem(KEY);
+    if(!id){id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));localStorage.setItem(KEY,id);}
+    return id;
+  }catch(_){ return 'visitor-'+Math.random().toString(16).slice(2); }
+}
+const VISITOR=visitorId();
 
 let topic=null, prompt='', promptIdx=-1, photoBlob=null;
 
@@ -237,6 +254,7 @@ async function send(){
   fd.append('prompt',prompt);
   fd.append('response',resp);
   fd.append('device_id',DEVICE);
+  fd.append('visitor_id',VISITOR);
   try{
     const r=await fetch('/api/wonders',{method:'POST',body:fd});
     if(!r.ok)throw 0;
@@ -253,6 +271,8 @@ function showSent(){
       <div class="dots">${DATA.topics.map(t=>`<i style="background:${t.color}"></i>`).join('')}</div>
       <div class="big">${C.sentBig}</div>
       <div class="note">${C.sentNote}</div>
+      <a class="btn-parent" href="/parent-app/?device=${encodeURIComponent(DEVICE)}&visitor=${encodeURIComponent(VISITOR)}">${C.parentLink}</a>
+      <div class="parent-hint">${C.parentHint}</div>
       <button class="btn-again" style="--tc:${topic.color}" onclick="location.reload()">${C.again}</button>
     </div>`;
 }

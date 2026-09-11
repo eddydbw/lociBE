@@ -114,9 +114,10 @@ def init_db():
                 order_idx  INTEGER DEFAULT 0
             )
         """)
-        # migrate pre-topic databases in place
+        # migrate pre-topic / pre-visitor databases in place
         for stmt in ("ALTER TABLE captures ADD COLUMN topic TEXT",
-                     "ALTER TABLE steps ADD COLUMN topic TEXT"):
+                     "ALTER TABLE steps ADD COLUMN topic TEXT",
+                     "ALTER TABLE wonders ADD COLUMN visitor_id TEXT"):
             try:
                 db.execute(stmt)
             except sqlite3.OperationalError:
@@ -646,17 +647,21 @@ def create_wonder():
         return jsonify({"ok": False, "error": "unknown topic"}), 400
     if "photo" not in request.files or not request.files["photo"].filename:
         return jsonify({"ok": False, "error": "no photo"}), 400
-    prompt    = " ".join((request.form.get("prompt") or "").split())[:200]
-    response  = " ".join((request.form.get("response") or "").split())[:500]
-    device_id = (request.form.get("device_id") or "demo").strip()[:64]
-    wonder_id = str(uuid.uuid4())
+    prompt     = " ".join((request.form.get("prompt") or "").split())[:200]
+    response   = " ".join((request.form.get("response") or "").split())[:500]
+    device_id  = (request.form.get("device_id") or "demo").strip()[:64]
+    # Set by the wonder page (persisted in that visitor's browser) so they can find their own
+    # wonderings again in the parent app later — distinct from device_id, which identifies the
+    # shared exhibit tablet/wall, not the visitor.
+    visitor_id = (request.form.get("visitor_id") or "").strip()[:64] or None
+    wonder_id  = str(uuid.uuid4())
     photo_path = PHOTOS_DIR / f"wonder-{wonder_id}.jpg"
     request.files["photo"].save(str(photo_path))
     with get_db() as db:
         db.execute(
-            "INSERT INTO wonders (id, device_id, topic, prompt, response, photo_path, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (wonder_id, device_id, topic, prompt, response, str(photo_path), time.time())
+            "INSERT INTO wonders (id, device_id, topic, prompt, response, photo_path, created_at, visitor_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (wonder_id, device_id, topic, prompt, response, str(photo_path), time.time(), visitor_id)
         )
         db.commit()
     print(f"[wonder] {wonder_id}  '{prompt}'  {device_id}  topic={topic}")
@@ -666,7 +671,9 @@ def create_wonder():
 def list_wonders(device_id):
     """Default: newest 30, oldest-first (exhibit 1 reveals in order).
     ?order=desc&limit=N&before=<created_at>: newest-first pages for the
-    exhibit 2 scrolling wall."""
+    exhibit 2 scrolling wall.
+    ?visitor_id=<id>: the parent app's live-data.js uses this to pull just one
+    visitor's own wonderings back out of the shared device_id's wall feed."""
     try:
         limit = min(max(int(request.args.get("limit", 30)), 1), 60)
     except ValueError:
@@ -674,6 +681,10 @@ def list_wonders(device_id):
     desc = request.args.get("order") == "desc"
     q = "SELECT * FROM wonders WHERE device_id=?"
     args = [device_id]
+    visitor_id = request.args.get("visitor_id")
+    if visitor_id:
+        q += " AND visitor_id=?"
+        args.append(visitor_id)
     before = request.args.get("before")
     if before:
         try:
