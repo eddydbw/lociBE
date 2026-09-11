@@ -11,7 +11,7 @@
 
 const LOCI_DATA = {
   child: {
-    name: "Ethan",
+    name: "Charlie",
     pronouns: { he: "he", him: "him", his: "his" }
   },
 

@@ -99,7 +99,7 @@ window.LOCI_LIVE_READY = (async () => {
   }
 
   // This file only loads in the hosted lociBE copy, never the standalone LociAPP demo, so
-  // "this is a live deployment, not the Ethan-persona demo" is always true here — not
+  // "this is a live deployment, not the Charlie-persona demo" is always true here — not
   // conditional on any fetch succeeding. Applied up front so it also covers the empty-state
   // case (zero captures so far) in both branches below.
   applyLiveModeAdjustments();
@@ -196,7 +196,7 @@ window.LOCI_LIVE_READY = (async () => {
 
     // Even with nothing captured yet, replace the static demo outright — a visitor using the
     // new "skip to parent app" link before their first capture should see a real empty state,
-    // not the static Ethan-persona demo routes.
+    // not the static Charlie-persona demo routes.
     D.days = Array.from(dayMap.entries()).map(([id, routes]) => ({ id, routes }));
     D.guides = guides;
   }
@@ -272,7 +272,7 @@ window.LOCI_LIVE_READY = (async () => {
     });
 
     // As above: replace the static demo even when empty, so an unstarted lens shows a real
-    // empty state rather than the static Ethan-persona demo routes.
+    // empty state rather than the static Charlie-persona demo routes.
     D.days = Array.from(dayMap.entries()).map(([id, routes]) => ({ id, routes }));
     D.guides = guides;
   }

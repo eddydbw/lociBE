@@ -175,7 +175,7 @@ init_db()
 DEMO_SCRIPT = {
     'demo': {
         'topic': 'Big Questions',
-        'child': 'Ethan',
+        'child': 'Charlie',
         'routes': [
             {
                 'title': 'Lying',
