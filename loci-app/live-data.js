@@ -77,17 +77,17 @@ window.LOCI_LIVE_READY = (async () => {
   }
 
   const AVOID_DEFAULT = [
-    'Questions {he} can answer with just "yes" or "no"',
+    'Questions answerable with just "yes" or "no"',
     'Explaining the "right" answer — it closes the wondering down',
     'Praising the photo instead of exploring the idea'
   ];
   const MOVES_DEFAULT = [
-    { icon: '↩', name: 'Say it back', text: 'Repeat {his} idea in your own words before responding.' },
+    { icon: '↩', name: 'Say it back', text: 'Repeat the idea back in your own words before responding.' },
     { icon: '?', name: 'Wonder aloud', text: 'Add your own uncertainty instead of an answer.' },
     { icon: '⇄', name: 'Test it gently', text: 'Offer a counter-example as a question, not a correction.' }
   ];
   const DEFAULT_STARTER = { say: 'Walk me through what you noticed when you picked this.',
-    why: "Starts from {his} own noticing, not your judgement." };
+    why: "Starts from their own noticing, not your judgement." };
 
   async function getJSON(url) {
     try {
@@ -129,16 +129,16 @@ window.LOCI_LIVE_READY = (async () => {
       const dayId = dayIdFor(Number(row.created_at) * 1000);
 
       guides[guideId] = {
-        title: "Talking about {child}'s photo",
+        title: "Talking about this photo",
         subtitle: `${topicTitle} · a 5-minute conversation, no expertise needed`,
         recap: {
           photoFrom: [routeId, 0],
           audioFrom: null,
           response: row.response,
-          text: `{child} chose this for "${row.prompt}" and wrote:`
+          text: `Chosen for "${row.prompt}", then written:`
         },
-        before: "Read {his} sentence together first — you're not looking for a right answer, you're wondering alongside {him}. It's fine to be stumped; say so out loud.",
-        waysInIntro: "Openers that ask {him} to build an answer, not just say yes or no. Tap one to see why it works.",
+        before: "Read the sentence together first — you're not looking for a right answer, you're wondering alongside them. It's fine to be stumped; say so out loud.",
+        waysInIntro: "Openers that invite more than a yes or no. Tap one to see why it works.",
         starters: startersFrom(t && t.cam && t.cam.opener, t && t.cam && t.cam.moves),
         moves: MOVES_DEFAULT,
         avoid: AVOID_DEFAULT
@@ -156,6 +156,7 @@ window.LOCI_LIVE_READY = (async () => {
     if (!dayMap.size) return;
     D.days = Array.from(dayMap.entries()).map(([id, routes]) => ({ id, routes }));
     D.guides = guides;
+    D.week.subline = "Exploring this week's wonderings";   // data.js's default names a child; there isn't one here
   }
 
   /* ---- physical lens flow: fixed script, filled in by real captures ---- */
@@ -203,32 +204,34 @@ window.LOCI_LIVE_READY = (async () => {
 
         const audioStep = steps[i + 1] && steps[i + 1].type === 'audio' ? steps[i + 1] : null;
         guides[guideId] = {
-          title: "Talking about {child}'s photo",
+          title: "Talking about this photo",
           subtitle: `${route.title} · a 5-minute conversation, no expertise needed`,
           recap: {
             photoFrom: [routeId, i],
             audioFrom: audioStep ? [routeId, i + 1] : null,
             text: audioStep
-              ? `{child} chose this for "${node.prompt}", then recorded:`
-              : `{child} chose this for "${node.prompt}".`
+              ? `Chosen for "${node.prompt}", then recorded:`
+              : `Chosen for "${node.prompt}".`
           },
-          before: "Listen to {his} recording together first if there is one — you're not looking for a right answer, you're wondering alongside {him}. It's fine to be stumped; say so out loud.",
-          waysInIntro: "Openers that ask {him} to build an answer, not just say yes or no. Tap one to see why it works.",
+          before: "Listen to the recording together first if there is one — you're not looking for a right answer, you're wondering alongside them. It's fine to be stumped; say so out loud.",
+          waysInIntro: "Openers that invite more than a yes or no. Tap one to see why it works.",
           starters: startersFrom(node.opener, node.moves),
           moves: MOVES_DEFAULT,
           avoid: AVOID_DEFAULT
         };
       });
 
-      const dayId = dayIdFor(stamps.find(Boolean));
+      const firstStamp = stamps.find(Boolean);
+      const dayId = dayIdFor(firstStamp);
       const list = dayMap.get(dayId) || [];
       list.push({ id: routeId, topic: route.title, topicTint: route.dot, topicEdge: '#4A1042',
-                  meta: "{child}'s route", steps });
+                  meta: firstStamp ? `Captured ${fmtTime(new Date(Number(firstStamp)))}` : '', steps });
       dayMap.set(dayId, list);
     });
 
     if (!dayMap.size) return;   // nothing captured yet — keep the static script as the demo fallback
     D.days = Array.from(dayMap.entries()).map(([id, routes]) => ({ id, routes }));
     D.guides = guides;
+    D.week.subline = "Exploring this week's wonderings";   // data.js's default names a child; there isn't one here
   }
 })();
